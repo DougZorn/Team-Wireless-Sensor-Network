@@ -11,6 +11,7 @@
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
 #include "read_write.h"
+#include "math.h"
 
 //Number of nodes, including Command Node
 const byte NUM_NODES = 4;
@@ -47,6 +48,8 @@ const int CMD_TYPE = 6; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //This is how many times to resend all data, for redundancy.  Arbitrarily set to 4
 const int REDUNDANCY = 4; 
 
+//This is how close a node can be to its desired position to merit Not moving
+const int NEARTOLERANCE = 10;  //arbitrarily set to 10 inches
 
 //A bunch of globals.
 //Timer info
@@ -58,6 +61,9 @@ boolean gotNewMsg;
 
 //Flag for controlling getting new data every cycle or not stub
 boolean wantNewMsg;
+
+//Flag for entering movement loop
+boolean moveRequired;
 
 //These control timeouts
 unsigned long currTime;
@@ -111,6 +117,7 @@ int byteToInt(byte input){
   else return 0;
 }
 
+//STUB  I'm including math.h to use trig functions, and there are round, ceil, and floor functions therein
 //Rounds ints and casts to byte 
 byte roundUp(float input){
   float output = input + 0.9999;
@@ -121,6 +128,7 @@ void resetData(){
   digitalWrite(9, LOW);
   gotNewMsg = false;
   wantNewMsg = true;
+  moveRequired = false;
   state = IDLE_S;
   currTime = 0;
   lastHeardFrom = 255;
@@ -311,6 +319,10 @@ void loop(){
       desX = byteToInt(currMsg[XCOORD]);
       desY = byteToInt(currMsg[YCOORD]);
       //stub, this is where movement variables are checked and changed (actual movement to be handled below)
+      
+      if(abs(currX - desX) > NEARTOLERANCE || abs(currY - desY) > NEARTOLERANCE){
+        moveRequired = true;
+      }
     }
     state = DECIDE;
     wantNewMsg = true;
@@ -381,6 +393,7 @@ void loop(){
     //Serial.println(" ");
     //gotNewMsg = false;
   }
+  
 
   //Code for sending a movement to the motors will go here, 
   //in RECEIVE state there will be flags and variables set to control movement
@@ -391,10 +404,81 @@ void loop(){
   //This block will also check to see if any distance to another node is
   //too close, and will either just not move, or (future) try to move around
   //the obstacle inme rudimentary way so
+  
+  //Movement is comprised of Lifting off, landing, or hovering/moving
+  
+  //Close to ground, and you haven't set flag, so take off
+  //you set flag so you can land again when session is over, and so
+  //you don't immediately take off as soon as you land
+  if(sonic < ---- && !flag){
+    liftoff();
+  }else{
+    //set a flag to say you have taken off already
+    //so you don't get stuck unable to land again
+  }
+  
+  //When landing flag is raised, decrease power if you're above some height
+  //until you get to some other height determined by the sonic (close to something
+  //that's under copter, not necessarily overall height), at which point you 
+  //set throttle to some specific, slow descending amount.
+  if(landflag){
+    if(sonic < ----){
+      //set throttle = some low number to come to final spot
+      //otherwise, start descending if you're above some altitude
+    }else if(alt > ----){
+      //throttle down a bit to start descending
+    }else if(alt > ---- && alt < ----){
+      //do nothing to slowly descend
+    }else {  }
+    
+    //check to see if you're moving too fast
+    if(imuMagnitude > ----){
+      //so Throttle up a bit. 
+    }
+  }
+  
+  if(moveRequired){
+    //alt - altitude
+    //sonic - ultrasonic
+    
+    int mag;
+    //mag = pickUpMagData();
+    //Assuming the mag data is some number of degrees off of due north, +-180, with +180 going counter clockwise
+    
+    //Calculate angle we need to go
+    int dX = desX - currX;
+    int dY = desY - currY;
+    int angle = int(round(atan(double(abs(dY)/abs(dX)))));
+    
+    //consider offset from north, taking into account abs of atan (see Erik's notes)
+    if(dX < 0 && dY > 0){
+      angle = 90 - angle;
+    }else if(dX > 0 && dY > 0){
+      angle = -1*(90 - angle);
+    }else if(dX < 0 && dY < 0){
+      angle = 90 + angle;
+    }else if(dX > 0 && dY < 0){
+      angle = -1*(90 + angle);
+    }
+    
+    int dist = int(sqrt(pow(double(dX), 2) + pow(double(dY), 2)));
+    
+    //Spin or Move
+    //if you're more than 15 degrees off
+    if(abs(mag - angle) > 15){
+      if((mag - angle) <= 0){
+        //spin clockwise (when looking down on copter)
+      }else{
+        //spin counter clockwise
+      }
+    }else if(dist > NEARTOLERANCE){
+      //pitch forward
+    }
+    
+    
+    
+    moveRequired = false; 
+  }
 
-  //delay(10); stub, not sure if we need a delay, but delays always 
-  //made my processing sketches work better way back when        
-
-  //delay(10);
 }
 

@@ -810,6 +810,7 @@ void loop () {
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
+	
     if(stTmp == rcSticks) {
       if(rcDelayCommand<250) rcDelayCommand++;
     } else rcDelayCommand = 0;
@@ -830,7 +831,8 @@ void loop () {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
       }
     }
-    if(rcDelayCommand == 20) {
+    
+	if(rcDelayCommand == 20) {
       if(f.ARMED) {                   // actions during armed
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
@@ -1007,7 +1009,8 @@ void loop () {
         }
       #endif
     #endif
-    #if MAG
+    
+	#if MAG
       if (rcOptions[BOXMAG]) {
         if (!f.MAG_MODE) {
           f.MAG_MODE = 1;
@@ -1338,6 +1341,8 @@ void loop () {
 #else
   #error "*** you must set PID_CONTROLLER to one existing implementation"
 #endif
+
+
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
