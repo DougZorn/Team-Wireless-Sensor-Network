@@ -394,6 +394,8 @@ void loop(){
     //gotNewMsg = false;
   }
   
+}
+  /*Below is rough draft of movement code.  Remove above parenthesis, this comment starter, and the comment finisher at bottom
 
   //Code for sending a movement to the motors will go here, 
   //in RECEIVE state there will be flags and variables set to control movement
@@ -410,7 +412,7 @@ void loop(){
   //Close to ground, and you haven't set flag, so take off
   //you set flag so you can land again when session is over, and so
   //you don't immediately take off as soon as you land
-  if(sonic < ---- && !flag){
+  if(sonic < ---- && !takeOffFlag){
     liftoff();
   }else{
     //set a flag to say you have taken off already
@@ -443,22 +445,22 @@ void loop(){
     
     int mag;
     //mag = pickUpMagData();
-    //Assuming the mag data is some number of degrees off of due north, +-180, with +180 going counter clockwise
+    //mag data is some number of degrees off of due north -180 to +180, with +180 going  clockwise
     
     //Calculate angle we need to go
     int dX = desX - currX;
     int dY = desY - currY;
     int angle = int(round(atan(double(abs(dY)/abs(dX)))));
     
-    //consider offset from north, taking into account abs of atan (see Erik's notes)
+    //Consider offset from north, taking into account abs of atan (see Erik's notes)
     if(dX < 0 && dY > 0){
-      angle = 90 - angle;
-    }else if(dX > 0 && dY > 0){
       angle = -1*(90 - angle);
+    }else if(dX > 0 && dY > 0){
+      angle = (90 - angle);
     }else if(dX < 0 && dY < 0){
-      angle = 90 + angle;
-    }else if(dX > 0 && dY < 0){
       angle = -1*(90 + angle);
+    }else if(dX > 0 && dY < 0){
+      angle = (90 + angle);
     }
     
     int dist = int(sqrt(pow(double(dX), 2) + pow(double(dY), 2)));
@@ -472,7 +474,21 @@ void loop(){
         //spin counter clockwise
       }
     }else if(dist > NEARTOLERANCE){
-      //pitch forward
+      //here would be where you'd check to see if other nodes are too close
+      //for loop through distance values, if any are too low, don't move, else move
+      //this would cause a condition though where nodes would get near each other, then
+      //both of them would freeze and never move again.  To fix this, we'd need some method
+      //of keeping track of if a node is in front of this node (as in, if, when you move forward,
+      //the distance to that particular node gets smaller, then it's in front of you and you should
+      //stop until that node gets farther away)
+      //
+      //this would cause another condition where if two nodes are heading directly toward each other
+      //they'd stop and freeze, but we'd just need to have some kind of timer to see if a quad
+      //has been waiting for another quad to get out of the way for too long, and then just attempt to either
+      //roll a bit then move forward, or spin some random amount, then move forward to see if the obstruction
+      //is no longer in the way
+      
+      //the above aside, pitch forward
     }
     
     
@@ -481,4 +497,4 @@ void loop(){
   }
 
 }
-
+*/
