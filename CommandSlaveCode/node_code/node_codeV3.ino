@@ -12,12 +12,6 @@
 #include "cc2500init_V2.h"
 #include "read_write.h"
 
-void setup(){
-  init_CC2500_V2();
-  pinMode(9,OUTPUT);
-  Serial.begin(9600);
-}
-
 //Number of nodes, including Command Node
 const byte NUM_NODES = 4;
 
@@ -35,7 +29,7 @@ const int IDLE_S=0;
 const int DECIDE=1;
 const int SEND=2;
 const int RECEIVE=3;
-int state = IDLE_S;
+int state;
 
 //The indexes of where each piece of data is (for readability of code)
 const int SENDER = 0;
@@ -48,7 +42,7 @@ const int RSSI_INDEX = 6;
 
 const int XCOORD = 2;
 const int YCOORD = 3;
-const int CMD_TYPE = 6;
+const int CMD_TYPE = 6; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! RSSI, use something else
 
 //This is how many times to resend all data, for redundancy.  Arbitrarily set to 4
 const int REDUNDANCY = 4; 
@@ -62,23 +56,22 @@ const unsigned long TIMEOUT_P = 1000;
 //Shows whether a new packet has arrived this turn
 boolean gotNewMsg;
 
+//Flag for controlling getting new data every cycle or not stub
+boolean wantNewMsg;
+
 //These control timeouts
 unsigned long currTime;
 unsigned long lastTime;
 
 //These are the structures that contain  data to be averaged of Rssi values
-byte rssiData[NUM_NODES][STRUCT_LENGTH] = {
-  0};
+byte rssiData[NUM_NODES][STRUCT_LENGTH];
 
 //Each contains a pointer for each of the nodes, indicating where to write in the above tables
-int rssiPtr[NUM_NODES] = {
-  0};
+int rssiPtr[NUM_NODES];
 
 //Final array of distances averaged from the rssiData arrays, to be sent out next turn
-byte rssiAvg[NUM_NODES] = {
-  0};
-byte distances[NUM_NODES] = {
-  0};
+byte rssiAvg[NUM_NODES];
+byte distances[NUM_NODES];
 
 //Coords of this node, current and desired
 //stub these will be negative or positive
@@ -87,14 +80,11 @@ int currX, currY, desX, desY;
 //Dummy value for now, will be filled later by sensor function stub
 byte sensorData = 5;
 
-//Flag for controlling getting new data every cycle or not stub
-boolean wantNewMsg = true;
+
 
 //The current message
-byte currMsg[PACKET_LENGTH] = {
-  0};
-byte oldMsg[PACKET_LENGTH] = {
-  0};
+byte currMsg[PACKET_LENGTH];
+byte oldMsg[PACKET_LENGTH];
 
 //Current RSSI/LQI values, stub what this data type is too
 byte currMsgRssi;
@@ -105,7 +95,7 @@ byte lastHeardFrom;
 
 //Temporary variable for calculating averages
 unsigned int temp;
-int goodMsg = 0;
+int goodMsg;
 
 
 //Converts values from 0-255 to (-)127-128
@@ -127,6 +117,39 @@ byte roundUp(float input){
   return byte(output);
 }
 
+void resetData(){
+  digitalWrite(9, LOW);
+  gotNewMsg = false;
+  wantNewMsg = true;
+  state = IDLE_S;
+  currTime = 0;
+  lastHeardFrom = 255;
+  currX = 0;
+  currY = 0;
+  desX = 0;
+  desY = 0;
+  goodMsg = 0;
+  unsigned long lastTime;
+  for(int x = 0; x<NUM_NODES; x++){
+    rssiPtr[x] = 0;
+    rssiAvg[x] = 0;
+    distances[x] = 0;
+    for(int y = 0; y<STRUCT_LENGTH; y++){
+      rssiData[x][y] = 0;
+    }
+  }
+  for(int x = 0; x<PACKET_LENGTH; x++){
+    currMsg[x] = 255;
+    oldMsg[x] = 255;
+  }
+}
+
+void setup(){
+  Serial.begin(9600);
+  init_CC2500_V2();
+  pinMode(9,OUTPUT);
+  resetData();
+}
 
 void loop(){
   //This block picks up a new message if the state machine requires one this
@@ -147,15 +170,18 @@ void loop(){
         currMsg[i] = oldMsg[i];
       }
       gotNewMsg = false;
+      //Serial.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
     }
     else{
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
       lastHeardFrom = currMsg[SENDER];
-      //Serial.print("Msg from ");
-      //Serial.print(currMsg[SENDER]);
-      //Serial.print(" end ");
-      //Serial.println(currMsg[END_BYTE]);
+      Serial.print("Msg from ");
+      Serial.print(currMsg[SENDER]);
+      Serial.print(" to ");
+      Serial.print(currMsg[TARGET]);
+      Serial.print(" end ");
+      Serial.println(currMsg[END_BYTE]);
     }
   }
 
@@ -165,19 +191,21 @@ void loop(){
     //Idle case is directly to wait until the command node sends startup message,
     //then is never used again
   case IDLE_S: 
-
+    Serial.println("IDLE");
     digitalWrite(9, LOW);
 
     //Serial.println("Idle State");
     //check receive FIFO for Startup Message
     if(currMsg[SENDER] == 0 && currMsg[TARGET] == 0){  //"Command is sender and target is 0" is the startup message
       state = DECIDE;
+      //resetData();
     }
     wantNewMsg = true;
     break;
 
     //Decide case is just to control whether to go to RECEIVE or SEND
   case DECIDE:
+    //Serial.println("DECIDE");
     digitalWrite(9, LOW);
     //Serial.println("Decide State");
 
@@ -196,6 +224,10 @@ void loop(){
 
     //This node's turn occurs if either the previous node has sent its final message
     //or if the timeout has occurred since the previous previous node has sent its final message
+    //if(currMsg[SENDER] == 0 && currMsg[TARGET] == 0 && currMsg[DISTANCE] == 0 && currMsg[SENSOR_DATA] == 0 && currMsg[HOP] == 0){  //"Command is sender and target is 0" is the startup message
+      //state = IDLE_S;
+      //wantNewMsg = false;
+    //}else 
     if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){
       state = SEND;
       wantNewMsg = false;
@@ -214,10 +246,9 @@ void loop(){
       wantNewMsg = true;
      // Serial.println("c");
     }
-    else{ //..otherwise just go to RECEIVE to handle cases next time, and don't pick up a new packet
+    else if(currMsg[TARGET]==MY_NAME){ //..otherwise just go to RECEIVE to handle cases next time, and don't pick up a new packet
       state = RECEIVE;
       wantNewMsg = false;
-      //Serial.println("d");
     }
 
     break;
@@ -225,6 +256,7 @@ void loop(){
     //SEND case is either to send all data that you have, some number of times, with the last message having END bit high
     //or to send a bunch of null packets, with the last message having END bit high
   case SEND:
+    //Serial.println("SEND");
    // Serial.println("Send State");
     digitalWrite(9, HIGH);
 
@@ -267,6 +299,8 @@ void loop(){
     //RECEIVE state just control some special conditions that need to be looked for and caught,
     //specifically commands and timeout (additional timeout for prev_prev_prev_node can be added easily here)
   case RECEIVE:
+    Serial.println("RECEIVE");
+    Serial.println(" ");
     //Serial.println("Receive State");
     digitalWrite(9, LOW);
     if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 0){  //message contains this node's current position
@@ -280,9 +314,11 @@ void loop(){
     }
     state = DECIDE;
     wantNewMsg = true;
+    gotNewMsg = false;
     break;
   }
 
+  //Serial.println("++++++++++++++++++++++++++");
   //Every cycle there is a new packet in currMsg, do RSSI/LQI
   //averaging, choosing, and conversion
   if(gotNewMsg){
@@ -308,25 +344,42 @@ void loop(){
     //in row is filled, then averages the row
     if(rssiData[currMsg[SENDER]][STRUCT_LENGTH - 1] != 0){
       temp = 0;
-      //Serial.print("RSSI: ");
+      Serial.print("RSSI: ");
       for(int i = 0; i < STRUCT_LENGTH; i++){
         temp += rssiData[currMsg[SENDER]][i];
-        //Serial.print(rssiData[currMsg[SENDER]][i], DEC);
-         //Serial.print(" ");
+        Serial.print(rssiData[currMsg[SENDER]][i], DEC);
+        Serial.print(" ");
       }
-      //Serial.print("TEMP: ");
-      //Serial.println(temp);
+      Serial.print("TEMP: ");
+      Serial.println(temp);
       rssiAvg[currMsg[SENDER]] = temp/STRUCT_LENGTH;
-      //Serial.print("RSSI AVG: ");
-      //Serial.println(rssiAvg[currMsg[SENDER]], DEC);
+      Serial.print("RSSI AVG: ");
+      Serial.println(rssiAvg[currMsg[SENDER]], DEC);
+    }else{
+      Serial.println("RSSI Array Not Full");
     }
 
     //Calculate distance from RSSI values and add to distance array
     distances[currMsg[SENDER]] = roundUp(log(float(rssiAvg[currMsg[SENDER]])/95)/log(0.99));
     //Serial.print("Distance: ");
-    //Serial.println(distances[currMsg[SENDER]],DEC);
+    //Serial.println(distance[currMsg[SENDER]],DEC);
     //Serial.println(" ");
-    
+    if((currMsg[SENDER] == 0 )&& (currMsg[TARGET] == 0) && (currMsg[DISTANCE] == 0) && (currMsg[SENSOR_DATA] == 0) && (currMsg[HOP] == 200)){
+        resetData();
+      /*Serial.print("Sender:");
+      Serial.println(currMsg[SENDER]);
+      Serial.print("Target: ");
+      Serial.println(currMsg[TARGET]);
+      Serial.print("Distance: ");
+      Serial.println(currMsg[DISTANCE]);
+      Serial.print("Data: ");
+      Serial.println(currMsg[SENSOR_DATA]);
+      Serial.print("Hop: ");
+      Serial.println(currMsg[HOP]);*/
+        Serial.println("RESETED");
+      }
+    //Serial.println(" ");
+    //gotNewMsg = false;
   }
 
   //Code for sending a movement to the motors will go here, 
@@ -344,3 +397,4 @@ void loop(){
 
   //delay(10);
 }
+

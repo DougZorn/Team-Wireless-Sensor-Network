@@ -15,12 +15,23 @@
 
 //Number of nodes, including Command Node
 const byte NUM_NODES = 4;
+byte RST[PACKET_LENGTH];
 
 void setup(){
+  Serial.begin(9600);
   init_CC2500_V2();
   pinMode(9,OUTPUT);
-  Serial.begin(9600);
-
+  while(listenForPacket(RST)){
+  }
+  
+  digitalWrite(9, HIGH);
+  for(int i = 0; i < 5; i++){
+    sendPacket(0, 0, 0, 0, 200, 0);
+  }
+  delay(500);
+  digitalWrite(9, LOW);
+  delay(500);
+  
   //This just hardcodes some values into the Desired table, as bytes
   randomSeed(analogRead(3));
   int desired[NUM_NODES][2];
@@ -30,6 +41,7 @@ void setup(){
   }
   desired[0][0] = byte(128);
   desired[0][0] = byte(128);
+  
 }
 
 
@@ -198,6 +210,7 @@ void loop(){
   case INIT:
     //Serial.println("Init state");
     //Send Startup message, with SENDER == 0, and TARGET == 0;  Sending 10 times arbitrarily
+    digitalWrite(9, HIGH);
     for(int i = 0; i < 10; i++){
       sendPacket(0, 0, 0, 0, 0, 0);
     }
@@ -343,7 +356,7 @@ void loop(){
     for(int j = 0; j < REDUNDANCY; j++){
       for(int i = 0; i < NUM_NODES; i++){
         sendPacket(MY_NAME, i, currLoc[i][0], currLoc[i][1], 0, 0);
-        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 1, 0);
+        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 0, 0);
       }
     }
     sendPacket(MY_NAME, NUM_NODES, desired[NUM_NODES][0], desired[NUM_NODES][1], 1, 1); 
