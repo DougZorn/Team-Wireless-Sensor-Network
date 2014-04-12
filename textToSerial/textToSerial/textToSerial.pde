@@ -22,8 +22,6 @@ void draw() {
     reader = createReader("input.txt");
     line = getNextLine(reader);
 
-    myPort.write(65);
-
     if (line != null) {
       pieces = split(line, ' ');
       if (int(trim(pieces[0])) == -3) {
@@ -68,16 +66,34 @@ void draw() {
         print(int(pieces[2]));
         print(" ");
         println(int(pieces[3]));
+        
+        myport.write(int(pieces[0]));
+        myport.write(" ");
+        myport.write(int(pieces[1]));
+        myport.write(" ");
+        myport.write(int(pieces[2]));
+        myport.write(" ");
+        myport.write(int(pieces[3]));        
       }else if(int(trim(pieces[0])) == -4){
         print(int(pieces[0]));
         print(" ");
         println(int(pieces[1]));
+        
+        myport.write(int(pieces[0]));
+        myport.write(" ");
+        myport.write(int(pieces[1]));
       }else{
         print(int(pieces[0]));
         print(" ");
         print(int(pieces[1]));
         print(" ");
         println(int(pieces[2]));
+        
+        myport.write(int(pieces[0]));
+        myport.write(" ");
+        myport.write(int(pieces[1]));
+        myport.write(" ");
+        myport.write(int(pieces[2]));
       }
     }
   }
