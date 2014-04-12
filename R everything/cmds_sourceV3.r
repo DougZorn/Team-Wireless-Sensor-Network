@@ -19,6 +19,7 @@ function(){
 				
 				#If round has changed from previously read round
 				if(line[1] == -3 && line[2] != prevRound){   # roundNumber + 1){
+					roundNumber = line[2]
 					
 					#Input has changed, get number of nodes
 					index <- index + 1 
@@ -93,7 +94,7 @@ function(){
 		}
 		
 		#MDS will not run if there are null values in dissimilarity matrix ("NA" values)
-		if(!hasNA){
+		if(hasNA){
 			print("Has NA values still")
 			flush.console()
 		}else{
@@ -101,7 +102,7 @@ function(){
 			fit <- cmdscale(data, eig=TRUE, k=2)
 			
 			#At least one eigenvalue must be nonzero for MDS to be a success
-			if(any(fit$eig >0)){
+			if(any(fit$eig > 0)){
 				#Find how much to translate results to center around node A (command node)
 				moveX <- x1 - fit$points[1,1]
 				moveY <- y1 - fit$points[1,2]
