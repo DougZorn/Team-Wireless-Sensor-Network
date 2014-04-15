@@ -394,8 +394,8 @@ void loop(){
     //gotNewMsg = false;
   }
   
-}
-  /*Below is rough draft of movement code.  Remove above parenthesis, this comment starter, and the comment finisher at bottom
+
+  //Below is rough draft of movement code. 
 
   //Code for sending a movement to the motors will go here, 
   //in RECEIVE state there will be flags and variables set to control movement
@@ -497,4 +497,4 @@ void loop(){
   }
 
 }
-*/
+
