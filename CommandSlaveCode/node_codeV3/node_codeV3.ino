@@ -7,10 +7,14 @@
  *
  */
 #include <SPI.h>
+#include <SoftwareSerial.h>      //needed for SoftwareSerial
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
 #include "read_write.h"
+
+//Declare Pins for UART
+SoftwareSerial mySerial(8, 7);   // RX, TX
 
 //Number of nodes, including Command Node
 const byte NUM_NODES = 4;
@@ -80,7 +84,10 @@ int currX, currY, desX, desY;
 //Dummy value for now, will be filled later by sensor function stub
 byte sensorData = 5;
 
-
+byte uartArray[64];
+//int x;
+//int y;
+int upDated;
 
 //The current message
 byte currMsg[PACKET_LENGTH];
@@ -97,6 +104,7 @@ byte lastHeardFrom;
 unsigned int temp;
 int goodMsg;
 
+//Uart Variables
 
 //Converts values from 0-255 to (-)127-128
 int byteToInt(byte input){
@@ -129,6 +137,7 @@ void resetData(){
   desX = 0;
   desY = 0;
   goodMsg = 0;
+  uartArray[64] = {0};
   unsigned long lastTime;
   for(int x = 0; x<NUM_NODES; x++){
     rssiPtr[x] = 0;
@@ -150,33 +159,115 @@ typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, P
   int16_t  magADC[3];              //180deg = 180, -180deg = -180
   int16_t  gyroADC[3];             //raw gyro data
   int16_t  accADC[3];              //raw accelerometer data
-} imu_t;
+  int32_t  EstAlt;             // in cm
+  int16_t  vario;              // variometer in cm/s
+} data_t;
 
+data_t myData;
+
+//used for backup incase of screwup
+data_t oldData;
+
+/*  //might need it
 typedef struct {
   uint8_t  vbat;               // battery voltage in 0.1V steps
   uint16_t intPowerMeterSum;
   uint16_t rssi;              // range: [0;1023]
   uint16_t amperage;
 } analog_t;
-
-typedef struct {
-  int32_t  EstAlt;             // in cm
-  int16_t  vario;              // variometer in cm/s
-} alt_t;
-
+*/
+/*  //might need it
 typedef struct {
   int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
   int16_t heading;             // variometer in cm/s
 } att_t;
+*/
+
+int storeData16(int dType, int16_t data16){
+  switch(dType){
+    case 1: 
+      imu.magADC[0] = data16;
+      break;
+    case 2:
+      imu.magADC[1] = data16;
+      break;
+    case 3:
+      imu.magADC[2] = data16;
+      break;
+    default :
+      return 1;
+  }
+}
+
+int storeData32(int dType, int32_t data32){
+  switch(dType){
+    case 20:
+      alt.EstAlt = data32;
+      break;
+    default :
+      return 1;
+  }
+}
+
+void writeData16(int16_t data){
+  byte temp;
+  temp = data>>8;  
+  mySerial.write(temp);
+  temp = data;
+  mySerial.write(temp);    
+}
+
+int updateData(){
+  byte sensorType;
+  byte tempByte =0;                       //For sending or receiving, UART only sents one bytes
+  int16_t tempData16;                   
+  int32_t tempData32;                   
+  int flag = 0;
+  
+  while(mySerial.available()){  // this checks the rx buffer if there is anything there, Buffer_Size = 64Byte
+    sensorType = mySerial.read();  //read one byte of data from buffer to temp
+    
+    //Reading From MultiWii Control Board to Mini
+    // this is for assembling the int16_t sent from the buffer. Used for sensor data
+    if(sensorType < 0x20){
+      tempByte = mySerial.read();
+      tempData16 = (tempByte <<8);        
+      tempByte = mySerial.read();
+      tempData16 += tempByte;              //append the bits to 0-7 bit of the 8-15 bit
+      storeData16(sensorType, tempData16);
+    }else{
+      tempByte = mySerial.read();
+      tempData32 = tempByte << 24;
+      tempByte = mySerial.read();
+      tempData32 += tempByte <<16;            //append the bits to 0-7 bit of the 8-15 bit
+      tempByte = mySerial.read();
+      tempData32 += tempByte <<8; 
+      tempByte = mySerial.read();
+      tempData32 += tempByte;
+      storeData32(sensorType, tempData32);
+    } 
+    flag =1;
+  }
+  mySerial.flush();
+  if(flag == 0){
+    return 0;
+  }else{
+    return 1;
+  }
+    
+}
 
 void setup(){
   Serial.begin(9600);
+  mySerial.begin(57600);
   init_CC2500_V2();
   pinMode(9,OUTPUT);
   resetData();
 }
 
 void loop(){
+  
+  upDated=0;
   //This block picks up a new message if the state machine requires one this
   //cycle.  It also accommodates packets not arriving yet, and checksum not
   //passing.  It also sets gotNewMsg, which controls data collection later
@@ -421,5 +512,14 @@ void loop(){
   //made my processing sketches work better way back when        
 
   //delay(10);
+  if(updateData()==1){
+    Serial.print(imu.magADC[0],DEC);
+    Serial.print(" ");
+    Serial.print(imu.magADC[1],DEC);
+    Serial.print(" ");
+    Serial.print(imu.magADC[2],DEC);
+    Serial.print(" ");
+    Serial.print(alt.EstAlt,DEC);
+  }
 }
 

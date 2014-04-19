@@ -28,6 +28,10 @@ November  2013     V2.3
 
 #include <avr/pgmspace.h>
 
+int waitRound = 0;
+byte temp;
+
+
 /*********** RC alias *****************/
 
 const char pidnames[] PROGMEM =
@@ -556,7 +560,7 @@ void setup() {
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL0_COM_SPEED);
     #if defined(PROMICRO)
-      SerialOpen(1,SERIAL1_COM_SPEED);
+      SerialOpen(1,57600);
     #endif
     #if defined(MEGA)
       SerialOpen(1,SERIAL1_COM_SPEED);
@@ -1342,4 +1346,40 @@ void loop () {
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
+  
+  if( ++waitRound >= 50){
+    if(SerialUsedTXBuff(1)>(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
+      
+      SerialWrite(1,1);
+      temp = imu.magADC[0] >> 8;
+      SerialWrite(1,temp);
+      temp = imu.magADC[0];
+      SerialWrite(1,temp);
+      
+      SerialWrite(1,2);
+      temp = imu.magADC[1] >> 8;
+      SerialWrite(1,temp);
+      temp = imu.magADC[1];
+      SerialWrite(1,temp);
+      
+      SerialWrite(1,3);
+      temp = imu.magADC[2] >> 8;
+      SerialWrite(1,temp);
+      temp = imu.magADC[2];
+      SerialWrite(1,temp);
+      
+      
+      SerialWrite(1,20);
+      temp = alt.EstAlt >> 24;
+      SerialWrite(1,temp);
+      temp = (alt.EstAlt>>16);
+      SerialWrite(1,temp);
+      temp = (alt.EstAlt>>8);
+      SerialWrite(1,temp);
+      temp = alt.EstAlt;
+      SerialWrite(1,temp);
+      
+      waitRound = 0;
+    }
+  }
 }
