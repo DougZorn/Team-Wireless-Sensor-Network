@@ -355,7 +355,7 @@ void resetData(){
 
 void setup(){
   Serial.begin(9600);
-  mySerial.begin(57600);
+  mySerial.begin(9600);
   init_CC2500_V2();
   pinMode(9,OUTPUT);
   resetData();
@@ -363,7 +363,6 @@ void setup(){
 
 void loop(){
   
-  upDated=0;
   //This block picks up a new message if the state machine requires one this
   //cycle.  It also accommodates packets not arriving yet, and checksum not
   //passing.  It also sets gotNewMsg, which controls data collection later
@@ -633,17 +632,17 @@ void loop(){
   if(upDated==1){
     Serial.println(" ");
   }
-  /*
+  
   if(updateData(uartArray)==0){
     //updateData(uartArray);
-    Serial.print(myData.magADC[0],HEX);
+    Serial.print(myData.magADC[0],DEC);
     Serial.print(" ");
-    Serial.print(myData.magADC[1],HEX);
+    Serial.print(myData.magADC[1],DEC);
     Serial.print(" ");
-    Serial.print(myData.magADC[2],HEX);
+    Serial.print(myData.magADC[2],DEC);
     Serial.print(" ");
-    Serial.print(myData.EstAlt,HEX);
+    Serial.print(myData.EstAlt,DEC);
     Serial.println(" ");
-  }*/
+  }
 }
 

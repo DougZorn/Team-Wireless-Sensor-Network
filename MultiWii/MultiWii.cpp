@@ -560,10 +560,10 @@ void setup() {
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL0_COM_SPEED);
     #if defined(PROMICRO)
-      SerialOpen(1,57600);
+      SerialOpen(1,SERIAL0_COM_SPEED);
     #endif
     #if defined(MEGA)
-      SerialOpen(1,SERIAL1_COM_SPEED);
+      SerialOpen(1,9600);
       SerialOpen(2,SERIAL2_COM_SPEED);
       SerialOpen(3,SERIAL3_COM_SPEED);
     #endif
@@ -1347,8 +1347,12 @@ void loop () {
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
   
-  if( ++waitRound >= 50){
-    if(SerialUsedTXBuff(1)>(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
+  
+
+  if( waitRound >= 50){
+    if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
+      
+      SerialWrite(1,0x80);
       
       SerialWrite(1,1);
       temp = imu.magADC[0] >> 8;
@@ -1379,7 +1383,10 @@ void loop () {
       temp = alt.EstAlt;
       SerialWrite(1,temp);
       
+      SerialWrite(1,0xC0);
+      delay(100);
       waitRound = 0;
     }
   }
+  waitRound++;
 }
