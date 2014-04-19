@@ -1369,12 +1369,12 @@ void loop () {
       SerialWrite(1,temp);
       
       
-      SerialWrite(1,20);
+      SerialWrite(1,32);
       temp = alt.EstAlt >> 24;
       SerialWrite(1,temp);
-      temp = (alt.EstAlt>>16);
+      temp = alt.EstAlt>>16;
       SerialWrite(1,temp);
-      temp = (alt.EstAlt>>8);
+      temp = alt.EstAlt>>8;
       SerialWrite(1,temp);
       temp = alt.EstAlt;
       SerialWrite(1,temp);
