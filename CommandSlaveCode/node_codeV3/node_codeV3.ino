@@ -12,6 +12,7 @@
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
 #include "read_write.h"
+#include "motorcontrol.h"
 
 //Declare Pins for UART
 SoftwareSerial mySerial(8, 7);   // RX, TX
@@ -24,6 +25,15 @@ const byte NUM_NODES = 4;
 const byte        MY_NAME = 1;
 const byte      PREV_NODE = 0;
 const byte PREV_PREV_NODE = 3;
+
+//flag for checking if RSSI array is full
+boolean RSSIArrayFull;
+
+//flag for being in air
+int Flight;
+
+//the distance between desire and current location before actually changing in INCHES
+const int NEARTOLERANCE = 5;
 
 //How many data entries to take an average from, arbitrarily set to 15 stub
 const int STRUCT_LENGTH = 5;
@@ -46,7 +56,7 @@ const int RSSI_INDEX = 6;
 
 const int XCOORD = 2;
 const int YCOORD = 3;
-const int CMD_TYPE = 6; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! RSSI, use something else
+const int CMD_TYPE = 4;
 
 //This is how many times to resend all data, for redundancy.  Arbitrarily set to 4
 const int REDUNDANCY = 4; 
@@ -62,6 +72,10 @@ boolean gotNewMsg;
 
 //Flag for controlling getting new data every cycle or not stub
 boolean wantNewMsg;
+
+
+//Flag for if movement is enabled
+boolean moveRequired;
 
 //These control timeouts
 unsigned long currTime;
@@ -84,6 +98,10 @@ int currX, currY, desX, desY;
 //Dummy value for now, will be filled later by sensor function stub
 byte sensorData = 5;
 
+//UltraSonic Stuff
+int UltraSonicPin = A0;    // select the input pin for the potentiometer
+
+//Uart Variables
 byte uartArray[64];
 int curSpot;
 int prtSpot;
@@ -104,8 +122,6 @@ byte lastHeardFrom;
 unsigned int temp;
 int goodMsg;
 
-//Uart Variables
-
 //Converts values from 0-255 to (-)127-128
 int byteToInt(byte input){
   if(input > 128){
@@ -125,6 +141,7 @@ byte roundUp(float input){
   return byte(output);
 }
 
+//structure for holding sensor information
 typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, Pitch, Yaw
   int16_t  accSmooth[3];            //smoother version of accADC
   int16_t  gyroData[3];             //Not sure
@@ -156,7 +173,7 @@ typedef struct {
 } att_t;
 */
 
-void initData(){
+void initData(){              //initialize everything in the backup and current UART sensor datas
   myData.EstAlt =0;
   myData.vario =0;
   myData.ultraSonic =0;
@@ -180,7 +197,7 @@ void initData(){
   }
 }
 
-void backupData(){
+void backupData(){            //back up old data incase update failed
   oldData.magADC[0]= myData.magADC[0];
   oldData.magADC[1]= myData.magADC[1];
   oldData.magADC[2]= myData.magADC[2];
@@ -194,7 +211,7 @@ void backupData(){
   oldData.EstAlt = myData.EstAlt; 
 }
 
-void revertData(){
+void revertData(){  //put old data back to current data, used when update failed
   myData.magADC[0] = oldData.magADC[0]; 
   myData.magADC[1] = oldData.magADC[1];
   myData.magADC[2] = oldData.magADC[2];
@@ -205,7 +222,7 @@ void revertData(){
   myData.EstAlt = oldData.EstAlt; 
 }
 
-int storeData16(int dType, int16_t data16){
+int storeData16(int dType, int16_t data16){//determine what type of int 16 data it is, and store it in correct place, will add as we go along
   switch(dType){
     case 1: 
       myData.magADC[0] = data16;
@@ -222,7 +239,7 @@ int storeData16(int dType, int16_t data16){
   return 0;
 }
 
-int storeData32(int dType, int32_t data32){
+int storeData32(int dType, int32_t data32){  //determine what type of int 32 data it is, and store it in correct place, will add as we go along
   switch(dType){
     case 32:
       myData.EstAlt = data32;
@@ -236,7 +253,7 @@ int storeData32(int dType, int32_t data32){
   return 0;
 }
 
-void writeData16(int16_t data){
+void writeData16(int16_t data){  //used to write to uart, if our data is int16
   byte temp;
   temp = data>>8;  
   mySerial.write(temp);
@@ -244,35 +261,38 @@ void writeData16(int16_t data){
   mySerial.write(temp);    
 }
 
-int updateData(byte *array){
-  if(upDated !=1){
-    return 1; 
+int updateData(byte *array){  //Ultra Sonic will still update even if uart does not update data when calling this
+
+  myData.ultraSonic = analogRead(UltraSonicPin);    // update ultraSonic data no matter what, it does not use uart from control board
+
+  if(upDated !=1){          //see if update from uart
+    return 1;               
   }
   byte sensorType;
-  byte startByte = 0x80;
-  byte endByte  = 0xC0; 
+  byte startByte = 0x80;    //Byte indicating the Start of chain of packets
+  byte endByte  = 0xC0;     //Byte indicating the End of chain of packets
   int16_t tempData16;                   
   int32_t tempData32;
   //int flag = 0;
-  int place = 0;
+  int place = 0;            //Locate where packet in array starts, eliminates garbage in front of start if any
   
-  backupData();
+  backupData();            //puts current data into another same structure, just in case we need them
   
-  while((array[place] != startByte)&&(place <64)){
+  while((array[place] != startByte)&&(place <64)){    //locate where start of packet is
     place++;
     //Serial.print("here: ");
     //Serial.println(place);
   } 
   
-  if(place>=64){
+  if(place>=64){      //If not start of packet is found, return fail
     return 1;
   }
-  place++;
+  place++;            //move to next byte after start packet
   
   do{
-    if((sensorType = array[place]) < 32){
-      place++;
-      tempData16 = array[place];
+    if((sensorType = array[place]) < 32){        //look at the type of data in the packet, there are usually multiple different types, all type < 32 are or int16 sensors
+      place++;                                   // move there
+      tempData16 = array[place];                //assemble them because they are int16 or int 32 and uart only sents bytes
       
       //Serial.print(" Data_x1: ");
       //Serial.print(tempData16, HEX);
@@ -286,9 +306,9 @@ int updateData(byte *array){
       //Serial.print(sensorType, HEX);
       //Serial.print(" Data: ");
       //Serial.println(tempData16, HEX);
-      storeData16(sensorType, tempData16);
-    }else{
-      place++; 
+      storeData16(sensorType, tempData16);    //store the assembled data into cor
+    }else{                                    //if int32 sensors
+      place++;                               //assemble
       tempData32 = array[place];
       tempData32 = tempData32 << 8;
       place++;
@@ -306,29 +326,31 @@ int updateData(byte *array){
       //Serial.print(sensorType, HEX);
       //Serial.print(" Data: ");
       //Serial.println(tempData32, HEX);
-      storeData32(sensorType, tempData32);
+      storeData32(sensorType, tempData32);    //store it in correct place
     }
      
     place++;
-    if(place>=64){
-      revertData();
+    if(place>=64){    //if it reach the max buffer size and array size without seeing End Byte, it is cuted off
+      revertData();  //put old data back and return fail
       return 1;  
     }
-  }while(array[place]!=endByte);
+  }while(array[place]!=endByte);  //loop until seeing endByte
   
-  for(int CT; CT<64;CT++){
+  for(int CT; CT<64;CT++){      //reset the array for storing data
     array[CT] = 0;
   }
-  mySerial.flush();
+  mySerial.flush();            //flush everything left in the uart rx buffer, size 64 bytes
+  
   return 0;
   
 }
 
 
-void resetData(){
+void resetData(){    //used to initialize data and reset when reseting all nodes, puts all data to default values
   digitalWrite(9, LOW);
   initData();
   gotNewMsg = false;
+  RSSIArrayFull = false;
   wantNewMsg = true;
   state = IDLE_S;
   currTime = 0;
@@ -338,6 +360,8 @@ void resetData(){
   desX = 0;
   desY = 0;
   goodMsg = 0;
+  moveRequired = false;
+  Flight = 0;
   unsigned long lastTime;
   for(int x = 0; x<NUM_NODES; x++){
     rssiPtr[x] = 0;
@@ -353,11 +377,14 @@ void resetData(){
   }
 }
 
+
+
 void setup(){
   Serial.begin(9600);
   mySerial.begin(9600);
   init_CC2500_V2();
-  pinMode(9,OUTPUT);
+  initializePWMs();
+  pinMode(11,OUTPUT);
   resetData();
 }
 
@@ -403,7 +430,7 @@ void loop(){
     //then is never used again
   case IDLE_S: 
     Serial.println("IDLE");
-    digitalWrite(9, LOW);
+    digitalWrite(11, LOW);
 
     //Serial.println("Idle State");
     //check receive FIFO for Startup Message
@@ -417,7 +444,7 @@ void loop(){
     //Decide case is just to control whether to go to RECEIVE or SEND
   case DECIDE:
     //Serial.println("DECIDE");
-    digitalWrite(9, LOW);
+    digitalWrite(11, LOW);
     //Serial.println("Decide State");
 
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
@@ -469,7 +496,7 @@ void loop(){
   case SEND:
     //Serial.println("SEND");
    // Serial.println("Send State");
-    digitalWrite(9, HIGH);
+    digitalWrite(11, HIGH);
 
     lastHeardFrom = MY_NAME;
     //If you've got at least the first four node's data, send everything you have
@@ -513,16 +540,24 @@ void loop(){
     Serial.println("RECEIVE");
     Serial.println(" ");
     //Serial.println("Receive State");
-    digitalWrite(9, LOW);
-    if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 0){  //message contains this node's current position
+    digitalWrite(11, LOW);
+    if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 201){  //message contains this node's current position
       currX = byteToInt(currMsg[XCOORD]);
       currY = byteToInt(currMsg[YCOORD]);
     }
-    else if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 1){  //message contains this node's desired position
+    else if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 202){  //message contains this node's desired position
       desX = byteToInt(currMsg[XCOORD]);
       desY = byteToInt(currMsg[YCOORD]);
       //stub, this is where movement variables are checked and changed (actual movement to be handled below)
     }
+    
+    //Best place for calculating if movement needed
+    
+    //if in x or y direct, it is off by 3 inches on any side, move to desired location
+    //if(abs(currX - desX) > NEARTOLERANCE || abs(currY - desY) > NEARTOLERANCE){
+      moveRequired = true;  //more of like we got the desired and current location
+    //}
+    
     state = DECIDE;
     wantNewMsg = true;
     gotNewMsg = false;
@@ -566,8 +601,10 @@ void loop(){
       rssiAvg[currMsg[SENDER]] = temp/STRUCT_LENGTH;
       Serial.print("RSSI AVG: ");
       Serial.println(rssiAvg[currMsg[SENDER]], DEC);
+      RSSIArrayFull = true;
     }else{
       Serial.println("RSSI Array Not Full");
+      RSSIArrayFull = false;
     }
 
     //Calculate distance from RSSI values and add to distance array
@@ -607,12 +644,13 @@ void loop(){
   //made my processing sketches work better way back when        
 
   //delay(10);
-  
+
+
+  //+++++++++++++++++++++++++++++++++++++ Update Sensor +++++++++++++++++++++
+  //variables for updating data
   curSpot=0;
   prtSpot = 0;
-  upDated = 0;
-  
-  
+  upDated = 0;  //flag for update
   
   while(mySerial.available()){ //maybe add || certain byte: hardcoded.
     delay(1);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
@@ -623,6 +661,8 @@ void loop(){
       break; 
     }
   }
+  
+  /*debugg code
   while((prtSpot < curSpot)&& upDated){
     Serial.print(uartArray[prtSpot], HEX);
     Serial.print(" ");
@@ -643,6 +683,110 @@ void loop(){
     Serial.print(" ");
     Serial.print(myData.EstAlt,DEC);
     Serial.println(" ");
+  }*/
+  
+  //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
+  
+  //should be after update for latest info on sensors  and adjust the movement
+  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull){          //update the Data and return if success, Ultrasonic will update no matter what
+    byte turn;
+    int dX = desX - currX;
+    int dY = desY - currY;
+    
+    int16_t angle = int16_t(round(atan(double(abs(dY)/abs(dX)))));  // give -90 to 90
+    
+    if(dX < 0 && dY > 0){        //desX is more on the left than currX 
+      angle = -1*(90 - angle);  
+    }else if(dX > 0 && dY > 0){
+      angle = (90 - angle);
+    }else if(dX < 0 && dY < 0){
+      angle = -1*(90 + angle);
+    }else if(dX > 0 && dY < 0){
+      angle = (90 + angle);
+    }
+    
+    int dist = int(sqrt(pow(double(dX), 2) + pow(double(dY), 2)));
+    //how often to come in here, because it seems like the movements is going to be 
+    //confused if mechanical delay is longer than time of coming into here
+    
+    
+    //Spin or Move
+    //if you're more than 15 degrees off
+    
+    
+    
+    if(abs(myData.magADC[0] - angle) > 15){    //check to see which mag we want and adjust the statment
+      if((myData.magADC[0] - angle) <= 0){    
+        //spin clockwise (when looking down on copter)
+        
+        // might want a function to determine how fast to spin
+        turn = 0x0A + byte(roundUp((float(abs(myData.magADC[0] - angle)/180))*3));  //a function that selects 10 
+        writeRudder(turn);
+        
+      }else{
+        //spin counter clockwise
+        turn = 0x0A - byte(roundUp((float(abs(myData.magADC[0] - angle)/180))*3));
+        writeRudder(turn);
+      }
+    }else if(dist > NEARTOLERANCE){
+      writeRudder(0x0A);  //set the turn to neutral
+      
+      boolean tooClose = false;
+      for(int x = 0; x< NUM_NODES; x++){
+        if(distances[x] < 24){    //if there is a copter within 2 feet to the copter, than it is too close
+          tooClose = true;
+        }  
+      }
+      
+      if(tooClose){
+        writePitch(0x0A);    //if too close, stay on where it is
+      }else{
+        writePitch(0x0C);    //if not, continue moving forward
+      }
+      
+      //here would be where you'd check to see if other nodes are too close
+      //for loop through distance values, if any are too low, don't move, else move
+      //this would cause a condition though where nodes would get near each other, then
+      //both of them would freeze and never move again.  To fix this, we'd need some method
+      //of keeping track of if a node is in front of this node (as in, if, when you move forward,
+      //the distance to that particular node gets smaller, then it's in front of you and you should
+      //stop until that node gets farther away)
+      //
+      //this would cause another condition where if two nodes are heading directly toward each other
+      //they'd stop and freeze, but we'd just need to have some kind of timer to see if a quad
+      //has been waiting for another quad to get out of the way for too long, and then just attempt to either
+      //roll a bit then move forward, or spin some random amount, then move forward to see if the obstruction
+      //is no longer in the way
+      
+      //the above aside, pitch forward
+    }
   }
+  
+  
+  /***************************** LEVEL Handling *******************************************/
+  if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
+    byte heightLevel = 0x0A;
+    if(myData.ultraSonic < 182){   //in cm, this is 6 feet
+      heightLevel = 0x0A + byte(roundUp(((float(182 - myData.ultraSonic)/182)*3)));       //power of moters might change because we added weights
+      writeThrust(heightLevel);
+    }else if(myData.ultraSonic > 190){                                             //lower if too above 182 - 190 cm rangle
+      heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -195)/195)*2))); 
+      writeThrust(heightLevel);
+    }else{
+      writeThrust(heightLevel);        //keep current level
+    }
+  }else if(Flight == 1){
+    if(myData.ultraSonic <= 21){    //if it is close to ground
+      if(myData.EstAlt <5){        //it is right at top of ground
+        writeThrust(0x07);          //turns off
+        Flight = 2;                //set it so it will ignore flight and land
+      }else{                       //if close but not above ground
+        writeThrust(0x09);         //slowly go down because it is close to ground
+      }
+    }else{                         //if not even close to ground
+      writeThrust(0x08);           //descend morderately
+    }
+  }
+  
 }
 

@@ -380,9 +380,11 @@ void loop(){
     for(int j = 0; j < REDUNDANCY; j++){
       for(int i = 0; i < NUM_NODES; i++){
         sendPacket(MY_NAME, i, currLoc[i][0], currLoc[i][1], 0, 0);
-        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 0, 0);
+        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 0, 0); //!!!!!!!!!!!!!!!! which one identifies the type of
       }
     }
+    
+    //why not broadcast to all node to end it, since they are all easedropping.
     sendPacket(MY_NAME, NUM_NODES, desired[NUM_NODES][0], desired[NUM_NODES][1], 1, 1); 
 
     lastHeardFrom = MY_NAME;
