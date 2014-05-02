@@ -1,29 +1,29 @@
 #ifndef NODEINTERFACE_H_
 #define NODEINTERFACE_H_
 
-#define MOTOR_ARM 		10
+#define MOTOR_ARM       10
 #define MOTOR_DISARM	11
 
-#define ANGLE_ON			20
-#define ANGLE_OFF			21
+#define ANGLE_ON	20
+#define ANGLE_OFF	21
 
-#define HORIZON_ON		30
-#define HORIZON_OFF		31
+#define HORIZON_ON	30
+#define HORIZON_OFF	31
 
-#define BARO_ON				40
-#define BARO_OFF			41
+#define BARO_ON		40
+#define BARO_OFF	41
 
-#define MAG_ON				50
-#define MAG_OFF				51
+#define MAG_ON		50
+#define MAG_OFF		51
 
 #define HEADFREE_ON	60
 #define HEADFREE_OFF	61
 
-#define HEADADJ_ON		70
-#define HEADADJ_OFF		71
+#define HEADADJ_ON	70
+#define HEADADJ_OFF	71
 
-#define FAILSAFE_ON		80
-//#define FAILSAFE_OFF		81
+#define FAILSAFE_ON	80
+//#define FAILSAFE_OFF	81
 
 #define READ_SENSORS 1
 
