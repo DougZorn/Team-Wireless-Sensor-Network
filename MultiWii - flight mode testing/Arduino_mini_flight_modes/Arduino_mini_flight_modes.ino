@@ -48,32 +48,36 @@ void loop(){
 	time++;
 	
 	switch(time){
-	case 500: //Angle mode toggle
+	case 50000: //Angle mode toggle
 		ANGLE_MODE = ANGLE_ON;
-		mySerial.write(ANGLE_ON);
+		mySerial.write(ANGLE_MODE);
+                Serial.println("Angle mode on");
 	break;
 	
-	case 1000: //Horizon mode toggle
+	case 100000: //Horizon mode toggle
 		ANGLE_MODE = ANGLE_OFF;
 		HORIZON_MODE = HORIZON_ON;
-		mySerial.write(HORIZON_ON);
+		mySerial.write(HORIZON_MODE);
+                Serial.println("Horizon mode on");
 	break;
 	
-	case 1500: //Baro mode toggle
+	case 150000: //Baro mode toggle
 		HORIZON_MODE = HORIZON_OFF;
 		BARO_MODE = BARO_ON;
-		mySerial.write(BARO_ON);
+		mySerial.write(BARO_MODE);
+                Serial.println("Baro mode on");
 	break;
 	
-	case 2000: //Head free mode toggle
+	case 200000: //Head free mode toggle
 		BARO_MODE = BARO_OFF;
 		HEADFREE_MODE = HEADFREE_ON;
-		mySerial.write(HEADFREE_ON);
+		mySerial.write(HEADFREE_MODE);
+                Serial.println("Headfree mode on");
 	break;
 	
 	}
 	
-	if(time > 2500){ 
+	if(time > 250000){ 
 	time = 0;
 	HEADFREE_MODE = HEADFREE_OFF;
 	}
