@@ -4,6 +4,7 @@
 #define  VERSION  230
 
 #include "types.h"
+#include "NodeInterface.h"
 
 // default POSHOLD control gains
 #define POSHOLD_P              .11

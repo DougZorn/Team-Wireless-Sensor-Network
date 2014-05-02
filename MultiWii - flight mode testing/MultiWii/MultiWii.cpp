@@ -25,6 +25,7 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
 
@@ -751,6 +752,7 @@ void go_disarm() {
 
 // ******** Main Loop *********
 void loop () {
+  checkNode();
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
   static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
@@ -1348,7 +1350,7 @@ void loop () {
   writeMotors();
   
   
-
+  /*
   if( waitRound >= 50){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
       
@@ -1389,4 +1391,5 @@ void loop () {
     }
   }
   waitRound++;
+  */
 }

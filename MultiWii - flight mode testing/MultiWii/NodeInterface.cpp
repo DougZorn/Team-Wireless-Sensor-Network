@@ -1,50 +1,49 @@
-#ifndef NODEINTERFACE_H_
-#define NODEINTERFACE_H_
 
-#define MOTOR_ARM       10
-#define MOTOR_DISARM	11
+#include "Arduino.h"
+#include "config.h"
+#include "def.h"
+#include "types.h"
+#include "MultiWii.h"
+#include "IMU.h"
+#include "Sensors.h"
+#include "Serial.h"
 
-#define ANGLE_ON	20
-#define ANGLE_OFF	21
 
-#define HORIZON_ON	30
-#define HORIZON_OFF	31
+#define MOTOR_ARM       11
+#define MOTOR_DISARM	10
 
-#define BARO_ON		40
-#define BARO_OFF	41
+#define ANGLE_ON	21
+#define ANGLE_OFF	20
 
-#define MAG_ON		50
-#define MAG_OFF		51
+#define HORIZON_ON	31
+#define HORIZON_OFF	30
 
-#define HEADFREE_ON	60
-#define HEADFREE_OFF	61
+#define BARO_ON		41
+#define BARO_OFF	40
 
-#define HEADADJ_ON	70
-#define HEADADJ_OFF	71
+#define MAG_ON		51
+#define MAG_OFF		50
 
-#define FAILSAFE_ON	80
-//#define FAILSAFE_OFF	81
+#define HEADFREE_ON	61
+#define HEADFREE_OFF	60
+
+#define HEADADJ_ON	71
+#define HEADADJ_OFF	70
+
+#define FAILSAFE_ON	81
+#define FAILSAFE_OFF	80
 
 #define READ_SENSORS 1
 
-const uint32 TIMEOUT 300;
+const unsigned int TIMEOUT = 300;
 
-uint8 lastOrder;
-uint8 newOrder;
-unit8 modeStatus;
-uint32 currentTime;
-uint32 previousTime;
+unsigned int lastOrder;
+unsigned int newOrder;
+unsigned int modeStatus;
+unsigned int currTime;
+unsigned int prevTime;
 
-void Node_init() {
-  // Open serial communications and wait for port to open:
-  //300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, or 115200.
-  // set the data rate for the SoftwareSerial port, max at 57600
-  // Make sure it is in sync with the Arduino baud rate
-  SerialOpen(1,57600);
-}
-
-
-void checkNode{}{
+void checkNode(){
 //check serial, if new serial, & different from last time, or same sensor ask from node and timeout has occured
 //interpret value
 //if input == 1, send package of sensor data 
@@ -56,90 +55,113 @@ void checkNode{}{
 
 //If there is a byte in the TX buffer
   if(SerialAvailable(1)>0){						
-	currentTime = millis() - lastTime;
+	currTime = millis() - prevTime;
 	newOrder = SerialRead(1);
 	if(newOrder != lastOrder){ 				//Order is new, now interpret
-		modeStatus = newOrder % 10;
+             SerialWrite(1, newOrder);
+             //SerialWrite(1, f.ANGLE_MODE);
+             modeStatus = newOrder % 10;
 		switch(newOrder){
-		case (MOTOR_ARM || MOTOR_DISARM):
-			if(f.OK_TO_ARM && !f.ARMED && modeStatus == 1)
-				f.ARMED = modeStatus;
-			if(f.ARMED && modeStatus == 0)
-				f.ARMED = modeStatus;
-		break;
-		
-		case (ANGLE_ON || ANGLE_OFF):
-			if( !f.ANGLE_MODE && modeStatus == 1){
-				f.ANGLE_MODE = modeStatus;
-				if(HORIZON_MODE) HORIZON_MODE = 0; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
-				}
-			if( f.ANGLE_MODE && modeStatus == 0)
-				f.ANGLE_MODE = modeStatus;
-		break;
-		
-		case (HORIZON_ON || HORIZON_OFF):
-			if( !f.HORIZON_MODE && modeStatus == 1){
-				f.HORIZON_MODE = modeStatus;
-				if(ANGLE_MODE) HORIZON_MODE = 0; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
-				}
-			if( f.HORIZON_MODE && modeStatus == 0)
-				f.HORIZON_MODE = modeStatus;
-		break;
-		
-		case (BARO_ON || BARO_OFF):
-			if(!f.BARO_MODE && modeStatus == 1){
-				f.BARO_MODE = modeStatus;
-				}
-			if(f.BARO_MODE && modeStatus == 0)
-				f.BARO_MODE = modeStatus;
-		break;
-		
-		case (MAG_ON || MAG_OFF):
-			if(!f.MAG_MODE && modeStatus == 1){
-				f.MAG_MODE = modeStatus;
-				}
-			if(f.MAG_MODE && modeStatus == 0)
-				f.MAG_MODE = modeStatus;
-		break;
-		
-		case (HEADFREE_ON || HEADFREE_OFF):
-			if(!f.HEADFREE_MODE && modeStatus == 1){
-				f.HEADFREE_MODE = modeStatus;
-				}
-			if(f.HEADFREE_MODE && modeStatus == 0){
-				f.HEADFREE_MODE = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_FREE is mode is disabled, so is HEAD_ADJ
-				f.HEADADJ_MODE = modeStatus;
-				}
-		break;
-		
-		case (HEADADJ_ON || HEADADJ_OFF):
-			if(!f.HEADADJ_MODE && modeStatus == 1){
-				f.HEADADJ_MODE = modeStatus;
-				}
-			if(f.HEADADJ_MODE && modeStatus == 0){
-				f.HEADADJ_MODE = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_ADJ is mode is disabled, so is HEAD_FREE
-				f.HEADFREE_MODE = modeStatus;
-				}
-		break;
-		
-		case (FAILSAFE_ON):
-			//STUB
-		break;
-		
-		case (READ_SENSORS)::
-			//STUB
-		break;
-		
-		//default:
-		//break;
+    		case (MOTOR_ARM):
+    			if(f.OK_TO_ARM && !f.ARMED && modeStatus == 1)
+    				f.ARMED = modeStatus;
+    		break;
+    
+                    case (MOTOR_DISARM):
+    			if(f.ARMED && modeStatus == 0)
+    				f.ARMED = modeStatus;
+    		break;
+    		
+    		case (ANGLE_ON):
+    			if( !f.ANGLE_MODE && modeStatus == 1){
+    				f.ANGLE_MODE = modeStatus;
+                                SerialWrite(1, f.ANGLE_MODE);
+    				if(f.HORIZON_MODE) f.HORIZON_MODE = 0; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
+    				}
+    		break;
+    
+                    case (ANGLE_OFF):
+    			if( f.ANGLE_MODE && modeStatus == 0){
+    				f.ANGLE_MODE = modeStatus;
+                                SerialWrite(1, f.ANGLE_MODE);
+                         }
+    		break;
+    		
+    		case (HORIZON_ON):
+    			if( !f.HORIZON_MODE && modeStatus == 1){
+    				f.HORIZON_MODE = modeStatus;
+    				if(f.ANGLE_MODE) f.ANGLE_MODE = 0; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
+    				}
+    		break;
+    
+    		case (HORIZON_OFF):
+    			if( f.HORIZON_MODE && modeStatus == 0)
+    				f.HORIZON_MODE = modeStatus;
+    		break;
+    		
+    		case (BARO_ON):
+    			if(!f.BARO_MODE && modeStatus == 1){
+    				f.BARO_MODE = modeStatus;
+    				}
+    		break;
+    		
+    		case (BARO_OFF):
+    			if(f.BARO_MODE && modeStatus == 0)
+    				f.BARO_MODE = modeStatus;
+    		break;
+    
+    		case (MAG_ON):
+    			if(!f.MAG_MODE && modeStatus == 1){
+    				f.MAG_MODE = modeStatus;
+    				}
+    		break;
+    
+    		case (MAG_OFF):
+    			if(f.MAG_MODE && modeStatus == 0)
+    				f.MAG_MODE = modeStatus;
+    		break;
+    		
+    		case (HEADFREE_ON):
+    			if(!f.HEADFREE_MODE && modeStatus == 1){
+    				f.HEADFREE_MODE = modeStatus;
+    				}
+    		break;
+    
+    		case (HEADFREE_OFF):
+    			if(f.HEADFREE_MODE && modeStatus == 0){
+    				f.HEADFREE_MODE = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_FREE is mode is disabled, so is HEAD_ADJ
+    				//f.HEADADJ_MODE = modeStatus;
+    				}
+    		break;
+    		
+    		/*case (HEADADJ_ON || HEADADJ_OFF):
+    			if(!f.HEADADJ_MODE && modeStatus == 1){
+    				f.HEADADJ_MODE = modeStatus;
+    				}
+    			if(f.HEADADJ_MODE && modeStatus == 0){
+    				f.HEADADJ_MODE = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_ADJ is mode is disabled, so is HEAD_FREE
+    				f.HEADFREE_MODE = modeStatus;
+    				}
+    		break; */
+    		
+    		case (FAILSAFE_ON):
+    			//STUB
+    		break;
+    		
+    		case (READ_SENSORS):
+    			//STUB
+    		break;
+    		
+    		//default:
+    		//break;
 		}
-		lastTime = millis(); //Reset time since last new order
+		prevTime = millis(); //Reset time since last new order
 		lastOrder = newOrder;
 		} else {
 		
 			if(newOrder == 1 && currentTime > TIMEOUT){		//Order is repeat sensor ask from node
 				//Send sensor data package
-				lastTime = millis(); //Reset time since last new order
+				prevTime = millis(); //Reset time since last new order
 			}
 		}
 	}
