@@ -49,12 +49,10 @@ void writePitch(byte value) //pin 6
 
 void ArmMotors(void)
 {
-  writeThrust(7);
-  //writePitch(7);
+  writeThrust(7);  
   writeRudder(14);
   delay(250);
-  writeRudder(10);  
-  //writePitch(8);
+  writeRudder(10);    
   writeThrust(8);
 }
 
