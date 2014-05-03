@@ -42,59 +42,75 @@ void setup() {
   // Open serial communications and wait for port to open:
   //300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, or 115200.
   Serial.begin(9600);
-  
+
   // set the data rate for the SoftwareSerial port, max at 57600
   mySerial.begin(9600);
+
+  ANGLE_MODE = ANGLE_ON;
+  mySerial.write(ANGLE_MODE);
+  //mySerial.write(ANGLE_MODE);
+  //mySerial.write(ANGLE_MODE);
+  Serial.println("Angle mode on");
 }
 
 void loop(){
-        if(mySerial.available() > 1){  // this checks the rx buffer if there is anything there, Buffer_Size = 64Byte
-          temp = mySerial.read();  //read one byte of data from buffer to temp
-          Serial.print("data: ");
-          Serial.println(temp);
-        }
-	time++;
-	
-	switch(time){
-	case 50000: //Angle mode toggle
-		ANGLE_MODE = ANGLE_ON;
-		mySerial.write(ANGLE_MODE);
-                //mySerial.write(ANGLE_MODE);
-                //mySerial.write(ANGLE_MODE);
-                Serial.println("Angle mode on");
-	break;
-	
-	case 100000: //Horizon mode toggle
-		ANGLE_MODE = ANGLE_OFF;
-		HORIZON_MODE = HORIZON_ON;
-		mySerial.write(HORIZON_MODE);
-		//mySerial.write(HORIZON_MODE);
-		//mySerial.write(HORIZON_MODE);
-                Serial.println("Horizon mode on");
-	break;
-	
-	case 150000: //Baro mode toggle
-		HORIZON_MODE = HORIZON_OFF;
-		BARO_MODE = BARO_ON;
-		mySerial.write(BARO_MODE);
-		//mySerial.write(BARO_MODE);
-		//mySerial.write(BARO_MODE);
-                Serial.println("Baro mode on");
-	break;
-	
-	case 200000: //Head free mode toggle
-		BARO_MODE = BARO_OFF;
-		HEADFREE_MODE = HEADFREE_ON;
-		mySerial.write(HEADFREE_MODE);
-                //mySerial.write(HEADFREE_MODE);
-                //mySerial.write(HEADFREE_MODE);
-                Serial.println("Headfree mode on");
-	break;
-	
-	}
-	
-	if(time > 250000){ 
-	time = 0;
-	HEADFREE_MODE = HEADFREE_OFF;
-	}
+  if(mySerial.available() > 1){  // this checks the rx buffer if there is anything there, Buffer_Size = 64Byte
+    temp = mySerial.read();  //read one byte of data from buffer to temp
+    Serial.print("data: ");
+    Serial.println(temp);
+  }
+  //time++;
+
+  //switch(time){
+  //case 50000: //Angle mode toggle
+  //ANGLE_MODE = ANGLE_ON;
+  //mySerial.write(ANGLE_MODE);
+  //mySerial.write(ANGLE_MODE);
+  //mySerial.write(ANGLE_MODE);
+  //Serial.println("Angle mode on");
+  //break;
+
+  /*
+        case 150000: //angle mode toggle
+   		ANGLE_MODE = ANGLE_OFF;
+   		mySerial.write(ANGLE_MODE);
+   		//mySerial.write(HORIZON_MODE);
+   		//mySerial.write(HORIZON_MODE);
+   Serial.println("Angle mode off");
+   	break;
+
+   case 100000: //Horizon mode toggle
+   		ANGLE_MODE = ANGLE_OFF;
+   		HORIZON_MODE = HORIZON_ON;
+   		mySerial.write(HORIZON_MODE);
+   		//mySerial.write(HORIZON_MODE);
+   		//mySerial.write(HORIZON_MODE);
+   Serial.println("Horizon mode on");
+   	break;
+
+   	case 150000: //Baro mode toggle
+   		HORIZON_MODE = HORIZON_OFF;
+   		BARO_MODE = BARO_ON;
+   		mySerial.write(BARO_MODE);
+   		//mySerial.write(BARO_MODE);
+   		//mySerial.write(BARO_MODE);
+   Serial.println("Baro mode on");
+   	break;
+
+   	case 200000: //Head free mode toggle
+   		BARO_MODE = BARO_OFF;
+   		HEADFREE_MODE = HEADFREE_ON;
+   		mySerial.write(HEADFREE_MODE);
+   //mySerial.write(HEADFREE_MODE);
+   //mySerial.write(HEADFREE_MODE);
+   Serial.println("Headfree mode on");
+   	break;
+   	*/
+  //}
+
+  //if(time > 250000){
+  //time = 0;
+  //HEADFREE_MODE = HEADFREE_OFF;
+  //}
 }
+
