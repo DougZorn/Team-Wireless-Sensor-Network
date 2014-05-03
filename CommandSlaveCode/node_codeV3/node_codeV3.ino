@@ -7,6 +7,7 @@
  *
  */
 #include <SPI.h>
+#include <string.h>
 #include <SoftwareSerial.h>      //needed for SoftwareSerial
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
@@ -16,6 +17,9 @@
 
 //Declare Pins for UART
 SoftwareSerial mySerial(8, 7);   // RX, TX
+
+//At the right height level
+boolean atLevel;
 
 //Number of nodes, including Command Node
 const byte NUM_NODES = 4;
@@ -64,8 +68,8 @@ const int REDUNDANCY = 4;
 
 //A bunch of globals.
 //Timer info
-const unsigned long TIMEOUT_PP = 3000; //??? check this timeout number stub
-const unsigned long TIMEOUT_P = 1000; 
+const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
+const unsigned long TIMEOUT_P = 10; 
 
 //Shows whether a new packet has arrived this turn
 boolean gotNewMsg;
@@ -150,6 +154,7 @@ typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, P
   int16_t  accADC[3];              //raw accelerometer data
   int32_t  EstAlt;             // in cm
   int16_t  vario;              // variometer in cm/s
+  int16_t  heading;
   uint32_t ultraSonic;        //in cm
 } data_t;
 
@@ -180,6 +185,8 @@ void initData(){              //initialize everything in the backup and current 
   oldData.EstAlt =0;
   oldData.vario =0;
   oldData.ultraSonic =0;
+  myData.heading =0;
+  oldData.heading =0;
   for(int x = 0; x<3;x++){
     myData.accSmooth[x]=0;            //smoother version of accADC
     myData.gyroData[x]=0;             //Not sure
@@ -207,7 +214,8 @@ void backupData(){            //back up old data incase update failed
   oldData.accSmooth[1]= myData.accSmooth[1];
   oldData.accSmooth[2]= myData.accSmooth[2];
   */
-  
+  oldData.heading = myData.heading; 
+
   oldData.EstAlt = myData.EstAlt; 
 }
 
@@ -218,7 +226,7 @@ void revertData(){  //put old data back to current data, used when update failed
   
   /* // add as we need them
   */
-  
+  myData.heading = oldData.heading; 
   myData.EstAlt = oldData.EstAlt; 
 }
 
@@ -233,6 +241,8 @@ int storeData16(int dType, int16_t data16){//determine what type of int 16 data 
     case 3:
       myData.magADC[2] = data16;
       break;
+    case 4:
+      myData.heading = data16;
     default :
       return 1;
   }
@@ -362,6 +372,7 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
   goodMsg = 0;
   moveRequired = false;
   Flight = 0;
+  atLevel =false;
   unsigned long lastTime;
   for(int x = 0; x<NUM_NODES; x++){
     rssiPtr[x] = 0;
@@ -384,7 +395,7 @@ void setup(){
   mySerial.begin(9600);
   init_CC2500_V2();
   initializePWMs();
-  pinMode(11,OUTPUT);
+  pinMode(4,OUTPUT);
   resetData();
 }
 
@@ -430,7 +441,7 @@ void loop(){
     //then is never used again
   case IDLE_S: 
     Serial.println("IDLE");
-    digitalWrite(11, LOW);
+    digitalWrite(4, LOW);
 
     //Serial.println("Idle State");
     //check receive FIFO for Startup Message
@@ -444,7 +455,7 @@ void loop(){
     //Decide case is just to control whether to go to RECEIVE or SEND
   case DECIDE:
     //Serial.println("DECIDE");
-    digitalWrite(11, LOW);
+    digitalWrite(4, LOW);
     //Serial.println("Decide State");
 
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
@@ -522,11 +533,11 @@ void loop(){
     }
     else{ //Not enough packets, send as many nulls as other nodes need to get an average from this node
       for(int i = 0; i < STRUCT_LENGTH; i++){
-        sendPacket(MY_NAME, MY_NAME, 0, 0, 0, 0);//stub byte conversion with neg values
+        sendPacket(MY_NAME, 255, 0, 0, 0, 0);//stub byte conversion with neg values
       }
 
       //..also send final packet with END set high
-      sendPacket(MY_NAME, MY_NAME, 0, 0, 0, 1);//stub byte conversion with neg values
+      sendPacket(MY_NAME, 255, 0, 0, 0, 1);//stub byte conversion with neg values
     }
 
     //Return to DECIDE and try to get new packet
@@ -540,7 +551,7 @@ void loop(){
     Serial.println("RECEIVE");
     Serial.println(" ");
     //Serial.println("Receive State");
-    digitalWrite(11, LOW);
+    digitalWrite(4, LOW);
     if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 201){  //message contains this node's current position
       currX = byteToInt(currMsg[XCOORD]);
       currY = byteToInt(currMsg[YCOORD]);
@@ -653,7 +664,7 @@ void loop(){
   upDated = 0;  //flag for update
   
   while(mySerial.available()){ //maybe add || certain byte: hardcoded.
-    delay(1);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
+    delayMicroseconds(5);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
     uartArray[curSpot++] = mySerial.read();
     upDated=1;
     if(curSpot>=64){
@@ -662,7 +673,7 @@ void loop(){
     }
   }
   
-  /*debugg code
+  /* //debugg code
   while((prtSpot < curSpot)&& upDated){
     Serial.print(uartArray[prtSpot], HEX);
     Serial.print(" ");
@@ -687,13 +698,36 @@ void loop(){
   
   //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
   
-  //should be after update for latest info on sensors  and adjust the movement
-  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull){          //update the Data and return if success, Ultrasonic will update no matter what
-    byte turn;
-    int dX = desX - currX;
-    int dY = desY - currY;
+  //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
+  // enough data for location, or at the properheight
+  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
-    int16_t angle = int16_t(round(atan(double(abs(dY)/abs(dX)))));  // give -90 to 90
+    writeRudder(0x0A);  //set netrual because random 
+    writeRoll(0x0A);
+    writePitch(0x0A);
+    
+    delayMicroseconds(100);
+    
+    byte turn;
+    /*
+    desX = 75;
+    desY = 30;
+    currX = 90;
+    currY = 10;
+    */
+    double dX = desX - currX;
+    double dY = desY - currY;
+    
+    //Note: abs rounds the stuff and atan returns radian
+    //radian = degree *pie/180
+    double angle = atan(dY/dX);  // give -90 to 90
+    angle = abs((180*angle)/3.14159265359);
+    
+    //Serial.println(" ");
+    //Serial.println("Distance Angle Test:");
+    //Serial.print("angle: ");
+    //Serial.println(angle, DEC);
+    
     
     if(dX < 0 && dY > 0){        //desX is more on the left than currX 
       angle = -1*(90 - angle);  
@@ -708,6 +742,25 @@ void loop(){
     int dist = int(sqrt(pow(double(dX), 2) + pow(double(dY), 2)));
     //how often to come in here, because it seems like the movements is going to be 
     //confused if mechanical delay is longer than time of coming into here
+    /*
+    Serial.print("desX: ");
+    Serial.println(desX, DEC);
+    Serial.print("desY: ");
+    Serial.println(desY, DEC);
+    Serial.print("currX: ");
+    Serial.println(currX, DEC);
+    Serial.print("currY: ");
+    Serial.println(currY, DEC);
+    Serial.print("dX: ");
+    Serial.println(dX, DEC);
+    Serial.print("dY: ");
+    Serial.println(dY, DEC);
+    Serial.print("angle: ");
+    Serial.println(angle, DEC);
+    Serial.print("dist: ");
+    Serial.println(dist, DEC);*/
+    
+    
     
     
     //Spin or Move
@@ -715,32 +768,54 @@ void loop(){
     
     
     
-    if(abs(myData.magADC[0] - angle) > 15){    //check to see which mag we want and adjust the statment
-      if((myData.magADC[0] - angle) <= 0){    
+    if(abs(myData.heading - angle) > 15){    //check to see which mag we want and adjust the statment
+      
+      //Serial.print("inside >15 magADC[0]: ");
+      //Serial.println(myData.magADC[0], DEC);
+    
+      if((myData.heading - angle) <= 0){    
         //spin clockwise (when looking down on copter)
         
         // might want a function to determine how fast to spin
-        turn = 0x0A + byte(roundUp((float(abs(myData.magADC[0] - angle)/180))*3));  //a function that selects 10 
+        turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
         writeRudder(turn);
+        //Serial.print("turn:  <= 0    => ");
+        //Serial.println(turn, HEX);
         
       }else{
         //spin counter clockwise
-        turn = 0x0A - byte(roundUp((float(abs(myData.magADC[0] - angle)/180))*3));
+        turn = 0x0A - byte(roundUp((float(abs(myData.heading - angle)/180))*3));
         writeRudder(turn);
+        
+        //Serial.print("turn: else   => ");
+        //Serial.println(turn, HEX);
       }
     }else if(dist > NEARTOLERANCE){
-      writeRudder(0x0A);  //set the turn to neutral
+      
+      //Serial.println("in moving dist > NEARTOLERANCE ");
       
       boolean tooClose = false;
-      for(int x = 0; x< NUM_NODES; x++){
-        if(distances[x] < 24){    //if there is a copter within 2 feet to the copter, than it is too close
-          tooClose = true;
+      
+      //Serial.print("Distance: ");
+      for(int i = 0; i< NUM_NODES; i++){
+        //Serial.print(distances[i],DEC);
+        //Serial.print(" ");
+        if(distances[i] < 10){    //if there is a copter within 2 feet to the copter, than it is too close
+          if(i != MY_NAME){      //if not myself
+            tooClose = true;
+            break;
+          }
         }  
       }
       
+        //Serial.println(" ");
       if(tooClose){
+        
+        //Serial.println("too close");
         writePitch(0x0A);    //if too close, stay on where it is
       }else{
+        
+        //Serial.println("far");
         writePitch(0x0C);    //if not, continue moving forward
       }
       
@@ -765,15 +840,35 @@ void loop(){
   
   /***************************** LEVEL Handling *******************************************/
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
+  
+    atLevel =false;
+    //Serial.println("in flight");
     byte heightLevel = 0x0A;
+    
+    myData.ultraSonic = 195;
+
+    int minHeight = 150; //in cm
+    int maxHeight = 160;     
+    
+    
     if(myData.ultraSonic < 182){   //in cm, this is 6 feet
-      heightLevel = 0x0A + byte(roundUp(((float(182 - myData.ultraSonic)/182)*3)));       //power of moters might change because we added weights
+      
+      heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
       writeThrust(heightLevel);
+      //Serial.print("Too low: ");
+      //Serial.print(heightLevel,DEC);
     }else if(myData.ultraSonic > 190){                                             //lower if too above 182 - 190 cm rangle
-      heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -195)/195)*2))); 
+      heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
       writeThrust(heightLevel);
+      //Serial.print("Too High: ");
+      //Serial.print(heightLevel,DEC);
     }else{
+      
+      //Serial.print("Just Right: ");
+      //Serial.print(heightLevel,DEC);
+      
       writeThrust(heightLevel);        //keep current level
+      atLevel =true;
     }
   }else if(Flight == 1){
     if(myData.ultraSonic <= 21){    //if it is close to ground
