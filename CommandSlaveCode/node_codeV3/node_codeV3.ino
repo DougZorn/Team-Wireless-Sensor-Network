@@ -18,6 +18,11 @@
 //Declare Pins for UART
 SoftwareSerial mySerial(8, 7);   // RX, TX
 
+
+//The LED PIN
+int ledPin = 9;
+
+
 //At the right height level
 boolean atLevel;
 
@@ -357,7 +362,7 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
 
 
 void resetData(){    //used to initialize data and reset when reseting all nodes, puts all data to default values
-  digitalWrite(9, LOW);
+  digitalWrite(ledPin, LOW);
   initData();
   gotNewMsg = false;
   RSSIArrayFull = false;
@@ -394,8 +399,8 @@ void setup(){
   Serial.begin(9600);
   mySerial.begin(9600);
   init_CC2500_V2();
-  initializePWMs();
-  pinMode(4,OUTPUT);
+  //initializePWMs();
+  pinMode(ledPin,OUTPUT);
   resetData();
 }
 
@@ -441,7 +446,7 @@ void loop(){
     //then is never used again
   case IDLE_S: 
     Serial.println("IDLE");
-    digitalWrite(4, LOW);
+    digitalWrite(ledPin, LOW);
 
     //Serial.println("Idle State");
     //check receive FIFO for Startup Message
@@ -455,7 +460,7 @@ void loop(){
     //Decide case is just to control whether to go to RECEIVE or SEND
   case DECIDE:
     //Serial.println("DECIDE");
-    digitalWrite(4, LOW);
+    digitalWrite(ledPin, LOW);
     //Serial.println("Decide State");
 
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
@@ -507,7 +512,7 @@ void loop(){
   case SEND:
     //Serial.println("SEND");
    // Serial.println("Send State");
-    digitalWrite(11, HIGH);
+    digitalWrite(ledPin, HIGH);
 
     lastHeardFrom = MY_NAME;
     //If you've got at least the first four node's data, send everything you have
@@ -551,7 +556,7 @@ void loop(){
     Serial.println("RECEIVE");
     Serial.println(" ");
     //Serial.println("Receive State");
-    digitalWrite(4, LOW);
+    digitalWrite(ledPin, LOW);
     if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 201){  //message contains this node's current position
       currX = byteToInt(currMsg[XCOORD]);
       currY = byteToInt(currMsg[YCOORD]);

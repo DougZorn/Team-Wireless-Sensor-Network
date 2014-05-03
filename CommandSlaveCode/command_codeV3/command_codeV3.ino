@@ -17,19 +17,22 @@
 const byte NUM_NODES = 4;
 byte RST[PACKET_LENGTH];
 
+//The LED PIN
+int ledPin = 9;
+
 void setup(){
   Serial.begin(9600);
   init_CC2500_V2();
-  pinMode(9,OUTPUT);
+  pinMode(ledPin,OUTPUT);
   while(listenForPacket(RST)){
   }
 
-  digitalWrite(9, HIGH);
+  digitalWrite(ledPin, HIGH);
   for(int i = 0; i < 5; i++){
     sendPacket(0, 0, 0, 0, 200, 0);
   }
   delay(500);
-  digitalWrite(9, LOW);
+  digitalWrite(ledPin, LOW);
   delay(500);
 
   //This just hardcodes some values into the Desired table, as bytes
@@ -295,7 +298,7 @@ void loop(){
   case INIT:
     //Serial.println("Init state");
     //Send Startup message, with SENDER == 0, and TARGET == 0;  Sending 10 times arbitrarily
-    digitalWrite(9, HIGH);
+    digitalWrite(ledPin, HIGH);
     for(int i = 0; i < 10; i++){
       sendPacket(0, 0, 0, 0, 0, 0);
     }
@@ -307,7 +310,7 @@ void loop(){
 
   case RECEIVE:
     //Serial.println("Receive state");
-    digitalWrite(9, LOW);
+    digitalWrite(ledPin, LOW);
 
     //If hear from Prev_Prev, and it's a valid message, "start" timeout timer
     if((currMsg[SENDER] == PREV_PREV_NODE || currMsg[SENDER] == PREV_NODE) && gotNewMsg){
@@ -358,7 +361,7 @@ void loop(){
 
   case CALCULATE:
     //Serial.println("Calculate state");
-    digitalWrite(9, HIGH);
+    digitalWrite(ledPin, HIGH);
 
     //Assert "distance to self"s to 0 then
     //average upper and lower triangles of data
@@ -503,12 +506,8 @@ void loop(){
       break;
     }
 
-    Serial.println("I am in loop: userCom is ");
-    Serial.println(mode, DEC);
   }
   while(stuckUser == 1);
-
-  Serial.println("passed the loop");
 
   //userCom() outputs
   //no new command is 0
