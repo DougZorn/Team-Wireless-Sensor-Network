@@ -219,7 +219,7 @@ int userCom(){
       }  
       sendPacket(0,255,0,0,203,1); 
       Serial.println("You typed shutdown");
-      return 1;
+      return 0;
     }
     else if(!strcmp(arg1, "land")){
       for(int i =0; i>100;i++){
@@ -228,7 +228,7 @@ int userCom(){
       }
       sendPacket(0,255,0,0,204,1); 
       Serial.println("You typed land");
-      return 3;
+      return 0;
     }
     else if(!strcmp(arg1, "flight")){
       for(int i =0; i>100;i++){
@@ -237,13 +237,13 @@ int userCom(){
       } 
       sendPacket(0,255,0,0,205,1);   
       Serial.println("You typed flight");
-      return 2;
+      return 1;
     }
     else{
-      return 0;
+      return 2;
     }
   }
-  return 0;
+  return 2;
 }
 
 /*
@@ -492,30 +492,30 @@ void loop(){
 
   }
 
-  //stuckUser =0;
-  //do{
-  //  if(userCom()==0){
-  //    stuckUser = 1;
-  //  }
-  //  else if(userCom()==1){
-  //    break;
-  //  }
+  stuckUser =0;
+  do{
+    int mode = userCom();
+    if(mode==0){
+      stuckUser = 1;
+    }
+    else if(mode==1){
+      stuckUser =0;
+      break;
+    }
 
-  //  Serial.println("I am in loop");
-  //}
-  //while(stuckUser == 1);
+    Serial.println("I am in loop: userCom is ");
+    Serial.println(mode, DEC);
+  }
+  while(stuckUser == 1);
 
-  //while(userCom() == 0 && prevCommand != flight){
-  //Serial.println("I am in loop");
-  //}
-
+  Serial.println("passed the loop");
 
   //userCom() outputs
   //no new command is 0
   //shutdown is 1
   //flight 2
   //land is 3
-  int exit = 1;
+  /*int exit = 1;
   int prevCmd = 0;
   int currCmd;
   while(exit){
@@ -533,11 +533,9 @@ void loop(){
       prevCmd = currCmd;
     }
     Serial.println(".");
-  }
+  }*/
 
 
-
-  Serial.println("passed the loop");
 }
 
 
