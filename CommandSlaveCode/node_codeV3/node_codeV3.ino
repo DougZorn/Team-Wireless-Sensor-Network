@@ -73,8 +73,8 @@ const int REDUNDANCY = 4;
 
 //A bunch of globals.
 //Timer info
-const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
-const unsigned long TIMEOUT_P = 10; 
+const unsigned long TIMEOUT_PP = 3000; //??? check this timeout number stub
+const unsigned long TIMEOUT_P = 1000; 
 
 //Shows whether a new packet has arrived this turn
 boolean gotNewMsg;
@@ -628,20 +628,40 @@ void loop(){
     //Serial.print("Distance: ");
     //Serial.println(distance[currMsg[SENDER]],DEC);
     //Serial.println(" ");
-    if((currMsg[SENDER] == 0 )&& (currMsg[TARGET] == 0) && (currMsg[DISTANCE] == 0) && (currMsg[SENSOR_DATA] == 0) && (currMsg[HOP] == 200)){
+    if((currMsg[SENDER] == 0 )&& (currMsg[TARGET] == 255)){ //if it is from Node 0 and it is a boardcast, than it must be a command, source 0 target 255 is used for command 
+                                                            //while source 0 target 0 is used for boardcast
+        
+      if(currMsg[HOP] == 200){ //if reset command
         resetData();
-      /*Serial.print("Sender:");
-      Serial.println(currMsg[SENDER]);
-      Serial.print("Target: ");
-      Serial.println(currMsg[TARGET]);
-      Serial.print("Distance: ");
-      Serial.println(currMsg[DISTANCE]);
-      Serial.print("Data: ");
-      Serial.println(currMsg[SENSOR_DATA]);
-      Serial.print("Hop: ");
-      Serial.println(currMsg[HOP]);*/
+        /*Serial.print("Sender:");
+        Serial.println(currMsg[SENDER]);
+        Serial.print("Target: ");
+        Serial.println(currMsg[TARGET]);
+        Serial.print("Distance: ");
+        Serial.println(currMsg[DISTANCE]);
+        Serial.print("Data: ");
+        Serial.println(currMsg[SENSOR_DATA]);
+        Serial.print("Hop: ");
+        Serial.println(currMsg[HOP]);*/
         Serial.println("RESETED");
       }
+      if(currMsg[HOP] == 203){    //shutdown command
+        Serial.println("SHUTDOWN");
+        Flight = 1;
+        
+        
+        //set flag for disarming moter
+        
+      }
+      if(currMsg[HOP] == 204){    //land command
+        Flight = 1;
+        Serial.println("LAND");
+      }
+      if(currMsg[HOP] == 205){    //FLIGHT command
+        Flight =0;
+        Serial.println("FLIGHT");
+      }
+    }
     //Serial.println(" ");
     //gotNewMsg = false;
   }
@@ -845,7 +865,20 @@ void loop(){
   
   /***************************** LEVEL Handling *******************************************/
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
-  
+    
+    
+    Serial.println("");
+    Serial.println("I am in Flight Mode");
+    Serial.println("");
+    
+    
+    //arm the motor once here
+    
+    
+    
+    
+    
+    
     atLevel =false;
     //Serial.println("in flight");
     byte heightLevel = 0x0A;
@@ -879,6 +912,22 @@ void loop(){
     if(myData.ultraSonic <= 21){    //if it is close to ground
       if(myData.EstAlt <5){        //it is right at top of ground
         writeThrust(0x07);          //turns off
+         
+         
+         
+         
+    Serial.println("");
+    Serial.println("I am in Land Mode for once");
+    Serial.println("");
+         
+        //disarm if shutdown
+        //don't if it is just land
+        //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
+        
+        
+        
+        
+        
         Flight = 2;                //set it so it will ignore flight and land
       }else{                       //if close but not above ground
         writeThrust(0x09);         //slowly go down because it is close to ground

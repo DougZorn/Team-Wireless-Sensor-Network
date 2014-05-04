@@ -29,7 +29,7 @@ void setup(){
 
   digitalWrite(ledPin, HIGH);
   for(int i = 0; i < 5; i++){
-    sendPacket(0, 0, 0, 0, 200, 0);
+    sendPacket(0, 255, 0, 0, 200, 0);
   }
   delay(500);
   digitalWrite(ledPin, LOW);
@@ -199,6 +199,7 @@ int userCom(){
   char userCommand[500];
   char *arg1;
   char *arg2;
+  digitalWrite(ledPin, LOW);
   if(Serial.available()){
     arg1 = NULL;
     arg2 = NULL;  //use for later improve arguments
@@ -213,40 +214,58 @@ int userCom(){
     while(Serial.available());
 
     arg1 = strtok(userCommand, " :\n\r");
-    arg2 = strtok(NULL, " :\n\r");
+    arg2 = strtok(NULL, " :\n\r");        //need further expansion of 
 
     if(!strcmp(arg1, "shutdown")){
-      for(int i =0; i>100;i++){
-        sendPacket(0, 0, 0, 0, 200, 0);
+      digitalWrite(ledPin, HIGH);
+      for(int i =0; i>1000;i++){
+        delay(10);
         sendPacket(0,255,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
       }  
       sendPacket(0,255,0,0,203,1); 
       Serial.println("You typed shutdown");
+      digitalWrite(ledPin, LOW);
       return 0;
     }
     else if(!strcmp(arg1, "land")){
-      for(int i =0; i>100;i++){
-        sendPacket(0, 0, 0, 0, 200, 0);
+      digitalWrite(ledPin, HIGH);
+      for(int i =0; i>1000;i++){
+        delay(10);
         sendPacket(0,255,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
       }
       sendPacket(0,255,0,0,204,1); 
       Serial.println("You typed land");
+      digitalWrite(ledPin, LOW);
       return 0;
     }
     else if(!strcmp(arg1, "flight")){
-      for(int i =0; i>100;i++){
-        sendPacket(0, 0, 0, 0, 200, 0);
-        sendPacket(0,255,0,0,205,0);    //255 is for broadcast2 and 205 is for shudown                         
+      digitalWrite(ledPin, HIGH);
+      for(int i =0; i>1000;i++){
+        delay(10);
+        sendPacket(0,255,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
       } 
-      sendPacket(0,255,0,0,205,1);   
+      sendPacket(0,255,0,0,205,1);
       Serial.println("You typed flight");
+      digitalWrite(ledPin, LOW);
       return 1;
-    }
+    }                                  
+    /*
+    else if(!strcmp(arg1, "reset")){    //might add reset command
+      digitalWrite(ledPin, HIGH);
+      for(int i =0; i>1000;i++){
+        delay(1);
+        sendPacket(0,255,0,0,200,0);                            
+      } 
+      sendPacket(0,255,0,0,200,1);
+      Serial.println("You typed reset");
+      digitalWrite(ledPin, LOW);
+      return 1;
+    }*/
     else{
-      return 2;
+      return 2;       //if wrong command, do nothing
     }
   }
-  return 2;
+  return 2;          //if no command, do nothing
 }
 
 /*
