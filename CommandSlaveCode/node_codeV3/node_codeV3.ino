@@ -12,7 +12,8 @@
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
-#include "read_write.h"
+//#include "read_write.h"
+#include "read_writeV2.h"
 #include "motorcontrol.h"
 
 //Declare Pins for UART
@@ -20,8 +21,11 @@ SoftwareSerial mySerial(8, 7);   // RX, TX
 
 
 //The LED PIN
-int ledPin = 9;
+int ledPin = 4;
 
+//Timer info
+const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
+const unsigned long TIMEOUT_P = 10; 
 
 //At the right height level
 boolean atLevel;
@@ -72,9 +76,6 @@ const int REDUNDANCY = 4;
 
 
 //A bunch of globals.
-//Timer info
-const unsigned long TIMEOUT_PP = 3000; //??? check this timeout number stub
-const unsigned long TIMEOUT_P = 1000; 
 
 //Shows whether a new packet has arrived this turn
 boolean gotNewMsg;
@@ -82,6 +83,8 @@ boolean gotNewMsg;
 //Flag for controlling getting new data every cycle or not stub
 boolean wantNewMsg;
 
+//flag for disarm and shutdown
+int OnOff;
 
 //Flag for if movement is enabled
 boolean moveRequired;
@@ -396,16 +399,35 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
 
 
 void setup(){
+  
   Serial.begin(9600);
+  
+  Serial.println("In Setup");
   mySerial.begin(9600);
+  
+  
+  Serial.println("After UART");
   init_CC2500_V2();
+  
+  
+  Serial.println("After SPI Init");
+  
   //initializePWMs();
   pinMode(ledPin,OUTPUT);
+  
+  
+  Serial.println("After LED");
+  
   resetData();
+  
+  
+  Serial.println("After resetData");
+  
+  Serial.println("Out Setup");
 }
 
 void loop(){
-  
+  Serial.println("In Loop");
   //This block picks up a new message if the state machine requires one this
   //cycle.  It also accommodates packets not arriving yet, and checksum not
   //passing.  It also sets gotNewMsg, which controls data collection later
@@ -648,8 +670,7 @@ void loop(){
       if(currMsg[HOP] == 203){    //shutdown command
         Serial.println("SHUTDOWN");
         Flight = 1;
-        
-        
+        OnOff = 1;
         //set flag for disarming moter
         
       }
@@ -873,11 +894,10 @@ void loop(){
     
     
     //arm the motor once here
-    
-    
-    
-    
-    
+    if(OnOff==0){
+      ArmMotors();
+      OnOff = 2;
+    }
     
     atLevel =false;
     //Serial.println("in flight");
@@ -911,23 +931,26 @@ void loop(){
   }else if(Flight == 1){
     if(myData.ultraSonic <= 21){    //if it is close to ground
       if(myData.EstAlt <5){        //it is right at top of ground
-        writeThrust(0x07);          //turns off
+        writeThrust(0x07);          //turns to lowest settings
          
          
          
          
     Serial.println("");
     Serial.println("I am in Land Mode for once");
-    Serial.println("");
-         
         //disarm if shutdown
         //don't if it is just land
         //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
         
+      if(OnOff==1){
         
+        Serial.println("Disarmed");
+        disarmMotors();
+        OnOff = 2;
+      }
         
-        
-        
+    Serial.println("");
+         
         Flight = 2;                //set it so it will ignore flight and land
       }else{                       //if close but not above ground
         writeThrust(0x09);         //slowly go down because it is close to ground
@@ -936,6 +959,9 @@ void loop(){
       writeThrust(0x08);           //descend morderately
     }
   }
+  Serial.println("Flight = ");
+  Serial.println(Flight, DEC);
   
+  Serial.println("OutLoop");
 }
 
