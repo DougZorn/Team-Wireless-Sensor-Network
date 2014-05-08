@@ -12,5 +12,7 @@
 #include "Serial.h"
 
 void checkNode();
+void setMode();
+void maintainNode();
 
 #endif

@@ -786,10 +786,10 @@ void Read_OpenLRS_RC() {
       rcData[PITCH] = Servo_Buffer[1];
       rcData[THROTTLE] = Servo_Buffer[2];
       rcData[YAW] = Servo_Buffer[3]; 
-      rcData[AUX1] = Servo_Buffer[4]; 
-      rcData[AUX2] = Servo_Buffer[5]; 
-      rcData[AUX3] = Servo_Buffer[6]; 
-      rcData[AUX4] = Servo_Buffer[7];  
+      //rcData[AUX1] = Servo_Buffer[4]; 
+      //rcData[AUX2] = Servo_Buffer[5]; 
+      //rcData[AUX3] = Servo_Buffer[6]; 
+      //rcData[AUX4] = Servo_Buffer[7];  
     }
     #if (FREQUENCY_HOPPING==1)
       Hopping(); //Hop to the next frequency

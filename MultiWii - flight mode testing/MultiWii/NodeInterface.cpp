@@ -37,138 +37,163 @@
 
 const unsigned int TIMEOUT = 300;
 
-unsigned int lastOrder;
-unsigned int newOrder;
+unsigned int lastOrder = 0;
+unsigned int newOrder = 1;
 unsigned int modeStatus;
 unsigned int currTime;
 unsigned int prevTime;
 
+void setMode(){
+  int t = 0;
+  t++;
+
+  if(!rcOptions[BOXHORIZON])
+    rcOptions[BOXHORIZON] = 1;
+  if(t>50000){
+    t = 0;
+    rcOptions[BOXHORIZON] = 0;
+  }
+}
+
 void checkNode(){
-  //check serial, if new serial, & different from last time, or same sensor ask from node and timeout has occured
-  //interpret value
-  //if input == 1, send package of sensor data
-  //start timer for sensor ask timeout
-
-  //if greater than 10, new flight mode has been applied
-  //check for interference with flight modes
-  //assign flight modes
-
-  //If there is a byte in the TX buffer
   if(SerialAvailable(1)>0){
-    currTime = millis() - prevTime;
     newOrder = SerialRead(1);
-    if(newOrder != lastOrder){ 				//Order is new, now interpret
-      SerialWrite(1, newOrder);
-      //SerialWrite(1, f.ANGLE_MODE);
-      modeStatus = newOrder % 10;
+    //SerialWrite(1, newOrder);
+    //if(newOrder != lastOrder){ 				//Order is new, now interpret
+      //modeStatus = newOrder % 10;
       switch(newOrder){
         case (MOTOR_ARM):
-        if(f.OK_TO_ARM && !f.ARMED && modeStatus == 1)
-          rcOptions[BOXARM] = modeStatus;
+        if(f.OK_TO_ARM && !f.ARMED)
+          rcOptions[BOXARM] = 1;
         break;
 
         case (MOTOR_DISARM):
-        if(f.ARMED && modeStatus == 0)
-          rcOptions[BOXARM] = modeStatus;
+        if(f.ARMED)
+          rcOptions[BOXARM] = 0;
         break;
 
         case (ANGLE_ON):
-        if( !f.ANGLE_MODE && modeStatus == 1){
-          rcOptions[BOXANGLE] = modeStatus;
-          //SerialWrite(1, f.ANGLE_MODE);
-          //if(f.HORIZON_MODE) rcOptions[BOXHORIZON] = modeStatus; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
+        rcData[AUX4] = 2000;
+        if( !f.ANGLE_MODE){
+          rcOptions[BOXANGLE] = 1;
+          SerialWrite(1, newOrder);
         }
         break;
 
         case (ANGLE_OFF):
-        if( f.ANGLE_MODE && modeStatus == 0){
-          rcOptions[BOXANGLE] = modeStatus;
-          //SerialWrite(1, f.ANGLE_MODE);
+        rcData[AUX1] = 1000;
+        if( f.ANGLE_MODE){
+          rcOptions[BOXANGLE] = 0;
+          SerialWrite(1, newOrder);
         }
         break;
 
         case (HORIZON_ON):
-        if( !f.HORIZON_MODE && modeStatus == 1){
-          rcOptions[BOXHORIZON] = modeStatus;
-          //if(f.ANGLE_MODE) f.ANGLE_MODE = 0; 		//CANNOT HAVE ANGLE AND HORIZON ON AT THE SAME TIME
-        }
+        rcData[AUX1] = 2000;
+        SerialWrite(1, newOrder);
+        rcOptions[BOXHORIZON] = 1;
         break;
 
         case (HORIZON_OFF):
-        if( f.HORIZON_MODE && modeStatus == 0)
-          rcOptions[BOXHORIZON] = modeStatus;
+        rcData[AUX1] = 1000;
+        SerialWrite(1, newOrder);
+        rcOptions[BOXHORIZON] = 0;
         break;
 
         case (BARO_ON):
-        if(!f.BARO_MODE && modeStatus == 1){
-          rcOptions[BOXBARO] = modeStatus;
+        rcData[AUX2] = 2000;
+        if(!f.BARO_MODE){
+          rcOptions[BOXBARO] = 1;
+          SerialWrite(1, newOrder);
         }
         break;
 
         case (BARO_OFF):
-        if(f.BARO_MODE && modeStatus == 0)
-          rcOptions[BOXBARO] = modeStatus;
+        rcData[AUX2] = 1200;
+        if(f.BARO_MODE){
+          rcOptions[BOXBARO] = 0;
+          SerialWrite(1, newOrder);
+        }
         break;
 
         case (MAG_ON):
-        if(!f.MAG_MODE && modeStatus == 1){
-          rcOptions[BOXMAG] = modeStatus;
+        rcData[AUX3] = 2000;
+        if(!f.MAG_MODE){
+          rcOptions[BOXMAG] = 1;
+          SerialWrite(1, newOrder);
         }
         break;
 
         case (MAG_OFF):
-        if(f.MAG_MODE && modeStatus == 0)
-          rcOptions[BOXMAG] = modeStatus;
+        rcData[AUX3] = 1000;
+        if(f.MAG_MODE){
+          rcOptions[BOXMAG] = 0;
+          SerialWrite(1, newOrder);
+        }
         break;
 
+        /*
         case (HEADFREE_ON):
-        if(!f.HEADFREE_MODE && modeStatus == 1){
-          rcOptions[BOXHEADFREE] = modeStatus;
-        }
-        break;
+         if(!f.HEADFREE_MODE){
+         rcOptions[BOXHEADFREE] = modeStatus;
+         }
+         break;
 
-        case (HEADFREE_OFF):
-        if(f.HEADFREE_MODE && modeStatus == 0){
-          rcOptions[BOXHEADFREE] = modeStatus;			//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_FREE is mode is disabled, so is HEAD_ADJ
-          //f.HEADADJ_MODE = modeStatus;
-        }
-        break;
+         case (HEADFREE_OFF):
+         if(f.HEADFREE_MODE){
+         rcOptions[BOXHEADFREE] = modeStatus;			//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_FREE is mode is disabled, so is HEAD_ADJ
+         }
+         break;
 
-        case (HEADADJ_ON):
-        if(f.HEADFREE_MODE && modeStatus == 1){
-          rcOptions[BOXHEADADJ] = modeStatus;
-        }
-        break;
+         case (HEADADJ_ON):
+         if(f.HEADFREE_MODE){
+         rcOptions[BOXHEADADJ] = modeStatus;
+         }
+         break;
 
-        case (HEADADJ_OFF):
-        if(f.HEADFREE_MODE && modeStatus == 0){
-          rcOptions[BOXHEADADJ] = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_ADJ is mode is disabled, so is HEAD_FREE
-          rcOptions[BOXHEADFREE] = modeStatus;
-        }
-        break;
-        
-        case (FAILSAFE_ON):
-        //STUB
-        break;
-
-        case (READ_SENSORS):
-        //STUB
-        break;
+         case (HEADADJ_OFF):
+         if(f.HEADFREE_MODE){
+         rcOptions[BOXHEADADJ] = modeStatus;				//HEAD_ADJ resets HEAD_FREE direction, so if HEAD_ADJ is mode is disabled, so is HEAD_FREE
+         rcOptions[BOXHEADFREE] = modeStatus;
+         }
+         break;
+         */
 
         //default:
         //break;
       }
-      prevTime = millis(); //Reset time since last new order
-      lastOrder = newOrder;
-    }
-    else {
-
-      if(newOrder == 1 && currentTime > TIMEOUT){		//Order is repeat sensor ask from node
-        //Send sensor data package
-        prevTime = millis(); //Reset time since last new order
-      }
-    }
+      //lastOrder = newOrder;
+    //}
   }
+}
+void maintainNode(){
+
+  //if(rcOptions[BOXHORIZON]){ //f.HORIZON_MODE)
+    //rcData[AUX1] = 2000;
+    //f.HORIZON_MODE = 1;
+    //rcOptions[BOXHORIZON] = 1;
+  //}
+   if(f.HORIZON_MODE){ //f.HORIZON_MODE)
+    rcData[AUX1] = 2000;
+    //f.HORIZON_MODE = 1;
+    //rcOptions[BOXHORIZON] = 1;
+  }
+  //if((rcOptions[BOXHORIZON] == 0)){ //f.HORIZON_MODE  == 0) || 
+    //rcData[AUX1] = 1000;
+    //f.HORIZON_MODE = 0;
+  //}
+  
+  if(f.HORIZON_MODE  == 0){
+     rcData[AUX1] = 1000;
+     //rcOptions[BOXHORIZON] = 0;
+  } 
+
+  //if(f.BARO_MODE || rcOptions[BOXBARO]) rcData[AUX2] = 2000;
+  // else if(!f.BARO_MODE) rcData[AUX2] = 1000;
+
+  //if(f.MAG_MODE || rcOptions[BOXMAG]) rcData[AUX3] = 2000;
+  //else if(!f.MAG_MODE) rcData[AUX3] = 1000;
+
 }
 
 
@@ -213,5 +238,6 @@ Data Structure of Sensor Data and other stuff
 //SerialUsedTXBuff(port number) returns the number of bytes stored in TX buffer, leave 50byte of space to avoid error
 
 //SerialWrite(port number, one byte of Data) Writes one byte of data to TX buffer, flag TX ISR, Some time later, TX ISR will transmitt all in buffer
+
 
 

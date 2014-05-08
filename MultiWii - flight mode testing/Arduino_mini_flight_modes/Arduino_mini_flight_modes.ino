@@ -35,7 +35,7 @@ unsigned int HEADFREE_MODE = HEADFREE_OFF;
 unsigned int HEADADJ_MODE = HEADADJ_OFF;
 unsigned int FAILSAFE_MODE = FAILSAFE_OFF;
 
-long time;
+long time =0;
 int temp;
 
 void setup() {
@@ -46,39 +46,46 @@ void setup() {
   // set the data rate for the SoftwareSerial port, max at 57600
   mySerial.begin(9600);
 
-  ANGLE_MODE = ANGLE_ON;
-  mySerial.write(ANGLE_MODE);
-  //mySerial.write(ANGLE_MODE);
-  //mySerial.write(ANGLE_MODE);
-  Serial.println("Angle mode on");
 }
 
 void loop(){
-  if(mySerial.available() > 1){  // this checks the rx buffer if there is anything there, Buffer_Size = 64Byte
+  if(mySerial.available() > 0){  // this checks the rx buffer if there is anything there, Buffer_Size = 64Byte
     temp = mySerial.read();  //read one byte of data from buffer to temp
     Serial.print("data: ");
     Serial.println(temp);
   }
-  //time++;
-
-  //switch(time){
-  //case 50000: //Angle mode toggle
-  //ANGLE_MODE = ANGLE_ON;
   //mySerial.write(ANGLE_MODE);
-  //mySerial.write(ANGLE_MODE);
-  //mySerial.write(ANGLE_MODE);
-  //Serial.println("Angle mode on");
-  //break;
+  
+  if(time < 125000 || (time > 125000 && time < 250000) || time > 250000)  time++;
+  
+  switch(time){
+  case 125000: //Angle mode toggle
+  HORIZON_MODE = HORIZON_ON;
+  //for(int i = 0; i < 10;i++)
+    mySerial.write(HORIZON_MODE);
+    if(temp == HORIZON_MODE){
+      time++;
+      Serial.println("Horizon mode on");
+    }
+  Serial.print("sent: ");
+  Serial.println(HORIZON_MODE);
+  
+  break;
 
-  /*
-        case 150000: //angle mode toggle
-   		ANGLE_MODE = ANGLE_OFF;
-   		mySerial.write(ANGLE_MODE);
-   		//mySerial.write(HORIZON_MODE);
-   		//mySerial.write(HORIZON_MODE);
-   Serial.println("Angle mode off");
-   	break;
-
+  
+  case 250000: //angle mode toggle
+  HORIZON_MODE = HORIZON_OFF;
+  //for(int i = 0; i < 10;i++)
+    mySerial.write(HORIZON_MODE);
+    if(temp == HORIZON_MODE){
+      time++;
+      Serial.println("Horizon mode off");
+    }
+  //mySerial.write(ANGLE_MODE);
+  Serial.print("sent: ");
+  Serial.println(HORIZON_MODE);
+  break; /*
+ 
    case 100000: //Horizon mode toggle
    		ANGLE_MODE = ANGLE_OFF;
    		HORIZON_MODE = HORIZON_ON;
@@ -106,11 +113,10 @@ void loop(){
    Serial.println("Headfree mode on");
    	break;
    	*/
-  //}
+  }
 
-  //if(time > 250000){
-  //time = 0;
-  //HEADFREE_MODE = HEADFREE_OFF;
-  //}
+  if(time > 250000){
+    time = 0;
+  }
 }
 

@@ -949,15 +949,18 @@ void loop () {
         AccInflightCalibrationSavetoEEProm = 1;
       }
     #endif
-/*
+     
+    maintainNode(); //maintain signal values for current flight mode status
+    
     uint16_t auxState = 0;
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
-      rcOptions[i] = (auxState & conf.activate[i])>0;
-*/
-    checkNode(); //CHECK FLIGHT MODE COMMANDS FROM NODE
+      rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
 
+    checkNode(); //If there is new data fromk UART, change rcOptions
+    //maintainNode();
+    
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
