@@ -412,6 +412,10 @@ void setup(){
   
   Serial.println("After SPI Init");
   
+  Serial.println(ReadReg(REG_IOCFG0),HEX);
+  Serial.println(ReadReg(REG_IOCFG1),HEX);
+  Serial.println(ReadReg(REG_IOCFG2),HEX);
+  
   //initializePWMs();
   pinMode(ledPin,OUTPUT);
   
@@ -427,7 +431,7 @@ void setup(){
 }
 
 void loop(){
-  Serial.println("In Loop");
+  //Serial.println("In Loop");
   //This block picks up a new message if the state machine requires one this
   //cycle.  It also accommodates packets not arriving yet, and checksum not
   //passing.  It also sets gotNewMsg, which controls data collection later
@@ -959,9 +963,9 @@ void loop(){
       writeThrust(0x08);           //descend morderately
     }
   }
-  Serial.println("Flight = ");
-  Serial.println(Flight, DEC);
+  //Serial.println("Flight = ");
+  //Serial.println(Flight, DEC);
   
-  Serial.println("OutLoop");
+  //Serial.println("OutLoop");
 }
 

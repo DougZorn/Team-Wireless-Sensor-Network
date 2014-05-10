@@ -23,8 +23,7 @@ void WriteReg(char addr, char value) //see page 22 of cc2500 data sheet for timi
   while (digitalRead(MISO) == HIGH)
   {
   };    
-  SPI.transfer(addr);
-  delayMicroseconds(1);
+  SPI.transfer(addr);  
   SPI.transfer(value);  
   digitalWrite(2,HIGH);
 }

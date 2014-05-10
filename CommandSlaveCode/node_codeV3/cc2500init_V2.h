@@ -12,9 +12,9 @@ char PATABLE[] = {0xff,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 void init_CC2500_V2(){        
         SPI.setClockDivider(SPI_CLOCK_DIV2);
         SPI.setDataMode(SPI_MODE0);
-        pinMode(SS,OUTPUT);
+        pinMode(2,OUTPUT);
         SPI.begin();
-        digitalWrite(SS,HIGH);  
+        digitalWrite(2,HIGH);  
         SendStrobe(CC2500_SRES);
 	WriteReg(REG_IOCFG2,VAL_IOCFG2);                //gdo2output pin configuration 
 	WriteReg(REG_IOCFG1,VAL_IOCFG1);                //gdo1output pin configuration 
