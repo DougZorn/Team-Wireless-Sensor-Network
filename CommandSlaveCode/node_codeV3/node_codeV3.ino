@@ -416,7 +416,7 @@ void setup(){
   Serial.println(ReadReg(REG_IOCFG1),HEX);
   Serial.println(ReadReg(REG_IOCFG2),HEX);
   
-  //initializePWMs();
+  initializePWMs();
   pinMode(ledPin,OUTPUT);
   
   
@@ -456,12 +456,12 @@ void loop(){
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
       lastHeardFrom = currMsg[SENDER];
-      Serial.print("Msg from ");
-      Serial.print(currMsg[SENDER]);
-      Serial.print(" to ");
-      Serial.print(currMsg[TARGET]);
-      Serial.print(" end ");
-      Serial.println(currMsg[END_BYTE]);
+      //Serial.print("Msg from ");
+      //Serial.print(currMsg[SENDER]);
+      //Serial.print(" to ");
+      //Serial.print(currMsg[TARGET]);
+      //Serial.print(" end ");
+      //Serial.println(currMsg[END_BYTE]);
     }
   }
 
@@ -632,17 +632,17 @@ void loop(){
     //in row is filled, then averages the row
     if(rssiData[currMsg[SENDER]][STRUCT_LENGTH - 1] != 0){
       temp = 0;
-      Serial.print("RSSI: ");
+     // Serial.print("RSSI: ");
       for(int i = 0; i < STRUCT_LENGTH; i++){
         temp += rssiData[currMsg[SENDER]][i];
-        Serial.print(rssiData[currMsg[SENDER]][i], DEC);
-        Serial.print(" ");
+        //Serial.print(rssiData[currMsg[SENDER]][i], DEC);
+        //Serial.print(" ");
       }
-      Serial.print("TEMP: ");
-      Serial.println(temp);
+      //Serial.print("TEMP: ");
+      //Serial.println(temp);
       rssiAvg[currMsg[SENDER]] = temp/STRUCT_LENGTH;
-      Serial.print("RSSI AVG: ");
-      Serial.println(rssiAvg[currMsg[SENDER]], DEC);
+      //Serial.print("RSSI AVG: ");
+      //Serial.println(rssiAvg[currMsg[SENDER]], DEC);
       RSSIArrayFull = true;
     }else{
       Serial.println("RSSI Array Not Full");
@@ -756,8 +756,6 @@ void loop(){
     writeRoll(0x0A);
     writePitch(0x0A);
     
-    delayMicroseconds(100);
-    
     byte turn;
     /*
     desX = 75;
@@ -816,12 +814,10 @@ void loop(){
     //Spin or Move
     //if you're more than 15 degrees off
     
-    
+      Serial.println(myData.heading , DEC);
     
     if(abs(myData.heading - angle) > 15){    //check to see which mag we want and adjust the statment
       
-      //Serial.print("inside >15 magADC[0]: ");
-      //Serial.println(myData.magADC[0], DEC);
     
       if((myData.heading - angle) <= 0){    
         //spin clockwise (when looking down on copter)
@@ -829,6 +825,9 @@ void loop(){
         // might want a function to determine how fast to spin
         turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
         writeRudder(turn);
+        
+        Serial.print("turn: ");
+        Serial.println(turn, HEX);
         //Serial.print("turn:  <= 0    => ");
         //Serial.println(turn, HEX);
         
@@ -837,12 +836,16 @@ void loop(){
         turn = 0x0A - byte(roundUp((float(abs(myData.heading - angle)/180))*3));
         writeRudder(turn);
         
+        
+        Serial.print("turn: ");
+        Serial.println(turn, HEX);
+        
         //Serial.print("turn: else   => ");
         //Serial.println(turn, HEX);
       }
     }else if(dist > NEARTOLERANCE){
       
-      //Serial.println("in moving dist > NEARTOLERANCE ");
+      Serial.println("in moving dist > NEARTOLERANCE ");
       
       boolean tooClose = false;
       
@@ -893,8 +896,9 @@ void loop(){
     
     
     Serial.println("");
-    Serial.println("I am in Flight Mode");
-    Serial.println("");
+    //Serial.print("I am in Flight Mode, OnOff = ");
+    //Serial.print(OnOff, DEC);
+    //Serial.println("");
     
     
     //arm the motor once here
@@ -906,27 +910,24 @@ void loop(){
     atLevel =false;
     //Serial.println("in flight");
     byte heightLevel = 0x0A;
-    
-    myData.ultraSonic = 195;
 
-    int minHeight = 150; //in cm
-    int maxHeight = 160;     
-    
-    
-    if(myData.ultraSonic < 182){   //in cm, this is 6 feet
+    int minHeight = 80; //in cm
+    int maxHeight = 90;     
+   
+    if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
       
       heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
       writeThrust(heightLevel);
-      //Serial.print("Too low: ");
+      Serial.print("Too low: ");
       //Serial.print(heightLevel,DEC);
-    }else if(myData.ultraSonic > 190){                                             //lower if too above 182 - 190 cm rangle
+    }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
       heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
       writeThrust(heightLevel);
-      //Serial.print("Too High: ");
+      Serial.print("Too High: ");
       //Serial.print(heightLevel,DEC);
     }else{
       
-      //Serial.print("Just Right: ");
+      Serial.print("Just Right: ");
       //Serial.print(heightLevel,DEC);
       
       writeThrust(heightLevel);        //keep current level

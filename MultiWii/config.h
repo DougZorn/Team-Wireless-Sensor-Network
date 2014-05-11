@@ -58,18 +58,18 @@
        This is the minimum value that allow motors to run at a idle speed  */
     //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
-    #define MINTHROTTLE 1063 // special ESC (simonk)
+    #define MINTHROTTLE 1050 // special ESC (simonk)
     //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
     //#define MINTHROTTLE 1150 // (*) (**)
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
-    #define MAXTHROTTLE 1882
+    #define MAXTHROTTLE 2000
 
   /****************************    Mincommand          *******************************/
     /* this is the value for the ESCs when they are not armed
        in some cases, this value must be lowered down to 900 for some specific ESCs, otherwise they failed to initiate */
-    #define MINCOMMAND 1062
+    #define MINCOMMAND 900
 
   /**********************************    I2C speed   ************************************/
     #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
@@ -1032,7 +1032,7 @@
        You cannot fly with this special version. It is only to be used for calibrating ESCs
        Read How To at http://code.google.com/p/multiwii/wiki/ESCsCalibration */
     #define ESC_CALIB_LOW  MINCOMMAND
-    #define ESC_CALIB_HIGH 1880
+    #define ESC_CALIB_HIGH 2000
     //#define ESC_CALIB_CANNOT_FLY  // uncomment to activate
 
   /****           internal frequencies                             ****/
