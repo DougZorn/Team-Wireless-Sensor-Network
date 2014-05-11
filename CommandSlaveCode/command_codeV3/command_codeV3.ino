@@ -215,36 +215,39 @@ int userCom(){
 
     arg1 = strtok(userCommand, " :\n\r");
     arg2 = strtok(NULL, " :\n\r");        //need further expansion of 
-
-    if(!strcmp(arg1, "shutdown")){
+  
+    String argString = String(arg2);
+    int argName = argString.toInt();
+    
+    if(!strcmp(arg1, "shutdown") && ((argName<NUM_NODES)||(argName==255))){
       digitalWrite(ledPin, HIGH);
       for(int i =0; i>1000;i++){
         delay(10);
-        sendPacket(0,255,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
+        sendPacket(0,argName,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
       }  
-      sendPacket(0,255,0,0,203,1); 
+      sendPacket(0,argName,0,0,203,1); 
       Serial.println("You typed shutdown");
       digitalWrite(ledPin, LOW);
       return 0;
     }
-    else if(!strcmp(arg1, "land")){
+    else if(!strcmp(arg1, "land") && ((argName<NUM_NODES)||(argName==255))){
       digitalWrite(ledPin, HIGH);
       for(int i =0; i>1000;i++){
         delay(10);
-        sendPacket(0,255,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
+        sendPacket(0,argName,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
       }
-      sendPacket(0,255,0,0,204,1); 
+      sendPacket(0,argName,0,0,204,1); 
       Serial.println("You typed land");
       digitalWrite(ledPin, LOW);
       return 0;
     }
-    else if(!strcmp(arg1, "flight")){
+    else if(!strcmp(arg1, "flight") && ((argName<NUM_NODES)||(argName==255))){
       digitalWrite(ledPin, HIGH);
       for(int i =0; i>1000;i++){
         delay(10);
-        sendPacket(0,255,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
+        sendPacket(0,argName,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
       } 
-      sendPacket(0,255,0,0,205,1);
+      sendPacket(0,argName,0,0,205,1);
       Serial.println("You typed flight");
       digitalWrite(ledPin, LOW);
       return 1;

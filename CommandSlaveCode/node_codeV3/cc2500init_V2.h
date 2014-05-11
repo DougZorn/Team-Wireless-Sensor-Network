@@ -1,6 +1,6 @@
 #include <SPI.h>
-//#include "read_writeV2.h"
-#include "read_write.h"
+#include "read_writeV2.h"
+//#include "read_write.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500_REG_V2.h"
 

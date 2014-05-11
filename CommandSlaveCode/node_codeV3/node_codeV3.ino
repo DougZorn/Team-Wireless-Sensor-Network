@@ -456,12 +456,12 @@ void loop(){
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
       lastHeardFrom = currMsg[SENDER];
-      //Serial.print("Msg from ");
-      //Serial.print(currMsg[SENDER]);
-      //Serial.print(" to ");
-      //Serial.print(currMsg[TARGET]);
-      //Serial.print(" end ");
-      //Serial.println(currMsg[END_BYTE]);
+      Serial.print("Msg from ");
+      Serial.print(currMsg[SENDER]);
+      Serial.print(" to ");
+      Serial.print(currMsg[TARGET]);
+      Serial.print(" end ");
+      Serial.println(currMsg[END_BYTE]);
     }
   }
 
@@ -654,7 +654,7 @@ void loop(){
     //Serial.print("Distance: ");
     //Serial.println(distance[currMsg[SENDER]],DEC);
     //Serial.println(" ");
-    if((currMsg[SENDER] == 0 )&& (currMsg[TARGET] == 255)){ //if it is from Node 0 and it is a boardcast, than it must be a command, source 0 target 255 is used for command 
+    if((currMsg[SENDER] == 0 )&& ((currMsg[TARGET] == 255)||(currMsg[TARGET] == MY_NAME))){ //if it is from Node 0 and it is a boardcast, than it must be a command, source 0 target 255 is used for command 
                                                             //while source 0 target 0 is used for boardcast
         
       if(currMsg[HOP] == 200){ //if reset command
@@ -742,12 +742,14 @@ void loop(){
     Serial.print(" ");
     Serial.print(myData.magADC[2],DEC);
     Serial.print(" ");
+    Serial.print(myData.heading,DEC);
+    Serial.print(" ");
     Serial.print(myData.EstAlt,DEC);
     Serial.println(" ");
   }*/
   
   //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
-  
+  moveRequired = true;
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
   if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
@@ -757,12 +759,12 @@ void loop(){
     writePitch(0x0A);
     
     byte turn;
-    /*
+    
     desX = 75;
     desY = 30;
     currX = 90;
     currY = 10;
-    */
+    
     double dX = desX - currX;
     double dY = desY - currY;
     
@@ -814,7 +816,12 @@ void loop(){
     //Spin or Move
     //if you're more than 15 degrees off
     
-      Serial.println(myData.heading , DEC);
+      Serial.print(" I am in update, Heading: ");
+      Serial.print(myData.heading, DEC);    
+      Serial.print(", angle: ");
+      Serial.println(angle, DEC);
+      
+
     
     if(abs(myData.heading - angle) > 15){    //check to see which mag we want and adjust the statment
       
@@ -826,7 +833,7 @@ void loop(){
         turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
         writeRudder(turn);
         
-        Serial.print("turn: ");
+        Serial.print("turn , <= 0: ");
         Serial.println(turn, HEX);
         //Serial.print("turn:  <= 0    => ");
         //Serial.println(turn, HEX);
@@ -837,7 +844,7 @@ void loop(){
         writeRudder(turn);
         
         
-        Serial.print("turn: ");
+        Serial.print("turn else: ");
         Serial.println(turn, HEX);
         
         //Serial.print("turn: else   => ");
