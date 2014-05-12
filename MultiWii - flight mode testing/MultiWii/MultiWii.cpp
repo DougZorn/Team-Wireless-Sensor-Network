@@ -959,7 +959,6 @@ void loop () {
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
 
     checkNode(); //If there is new data fromk UART, change rcOptions
-    //maintainNode();
     
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC

@@ -33,9 +33,9 @@ unsigned int lastOrder = 0;
 unsigned int newOrder = 1;
 
 void checkNode(){
-  //if(SerialAvailable(1)>0){    //Bytes in the RX buffer
+  if(SerialAvailable(1)>0){    //Bytes in the RX buffer
     newOrder = SerialRead(1);
-    if(newOrder != lastOrder)
+    //if(newOrder != lastOrder){
     switch(newOrder){
       case (HORIZON_ON):
       rcData[AUX1] = 2000;       //Set spoofed RX value for horizon channel
@@ -100,8 +100,8 @@ void checkNode(){
        */
     }
     lastOrder = newOrder;
-    }
-  //}
+    //}
+  }
 }
 void maintainNode(){
 

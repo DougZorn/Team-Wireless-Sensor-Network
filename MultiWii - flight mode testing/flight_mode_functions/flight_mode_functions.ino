@@ -89,7 +89,7 @@ boolean toggleFlightModes(byte modeValue){
     Serial.println(temp);
   }
   if(temp == modeValue){
-    Serial.print("Mode turned on: ");
+    Serial.print("Mode toggled: ");
     Serial.println(modeValue);
     modeChanged = true;
     toggleValueSent = false;

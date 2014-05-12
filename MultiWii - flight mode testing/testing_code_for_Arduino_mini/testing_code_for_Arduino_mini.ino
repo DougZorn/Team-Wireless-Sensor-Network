@@ -1,6 +1,7 @@
 #include <SoftwareSerial.h>      //needed for SoftwareSerial
 SoftwareSerial mySerial(8, 7);   // RX, TX
 
+/*
 #define MOTOR_ARM       11
 #define MOTOR_DISARM	10
 
@@ -24,16 +25,30 @@ SoftwareSerial mySerial(8, 7);   // RX, TX
 
 #define FAILSAFE_ON	81
 #define FAILSAFE_OFF	80
+*/
 
-#define READ_SENSORS 1
+const byte MOTOR_ARM  = 0x0B;
+const byte MOTOR_DISARM	= 0x0A;
+
+const byte ANGLE_ON = 0x15;
+const byte ANGLE_OFF = 	0x14;
+
+const byte HORIZON_ON	 = 0x1F;
+const byte HORIZON_OFF	 = 0x1E;
+
+const byte BARO_ON     =  0x29;
+const byte BARO_OFF	 = 0x28;
+
+const byte MAG_ON       =  0x33;
+const byte MAG_OFF	 = 0x32;
 
 unsigned int ARM_STATUS = MOTOR_DISARM;
 unsigned int ANGLE_MODE = ANGLE_OFF;
 unsigned int HORIZON_MODE = HORIZON_OFF;
 unsigned int BARO_MODE = BARO_OFF;
-unsigned int HEADFREE_MODE = HEADFREE_OFF;
-unsigned int HEADADJ_MODE = HEADADJ_OFF;
-unsigned int FAILSAFE_MODE = FAILSAFE_OFF;
+//unsigned int HEADFREE_MODE = HEADFREE_OFF;
+//unsigned int HEADADJ_MODE = HEADADJ_OFF;
+//unsigned int FAILSAFE_MODE = FAILSAFE_OFF;
 
 long time =0;
 int temp;
