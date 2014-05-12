@@ -25,12 +25,9 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
-
-int waitRound = 0;
-byte temp;
-
 
 /*********** RC alias *****************/
 
@@ -560,10 +557,10 @@ void setup() {
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL0_COM_SPEED);
     #if defined(PROMICRO)
-      SerialOpen(1,SERIAL0_COM_SPEED);
+      SerialOpen(1,SERIAL1_COM_SPEED);
     #endif
     #if defined(MEGA)
-      SerialOpen(1,9600);
+      SerialOpen(1,SERIAL1_COM_SPEED);
       SerialOpen(2,SERIAL2_COM_SPEED);
       SerialOpen(3,SERIAL3_COM_SPEED);
     #endif
@@ -574,6 +571,7 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
+  Node_init();
   readGlobalSet();
   #ifndef NO_FLASH_CHECK
     #if defined(MEGA)
@@ -751,6 +749,7 @@ void go_disarm() {
 
 // ******** Main Loop *********
 void loop () {
+  checkNode();
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
   static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
@@ -1346,47 +1345,4 @@ void loop () {
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
-  
-  
-
-  if( waitRound >= 50){
-    if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
-      
-      SerialWrite(1,0x80);
-      
-      SerialWrite(1,1);
-      temp = imu.magADC[0] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[0];
-      SerialWrite(1,temp);
-      
-      SerialWrite(1,2);
-      temp = imu.magADC[1] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[1];
-      SerialWrite(1,temp);
-      
-      SerialWrite(1,3);
-      temp = imu.magADC[2] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[2];
-      SerialWrite(1,temp);
-      
-      
-      SerialWrite(1,32);
-      temp = alt.EstAlt >> 24;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt>>16;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt>>8;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt;
-      SerialWrite(1,temp);
-      
-      SerialWrite(1,0xC0);
-      delay(100);
-      waitRound = 0;
-    }
-  }
-  waitRound++;
 }
