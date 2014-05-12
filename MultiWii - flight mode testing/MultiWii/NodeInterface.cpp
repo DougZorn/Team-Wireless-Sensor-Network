@@ -38,37 +38,37 @@ void checkNode(){
     //if(newOrder != lastOrder){
     switch(newOrder){
       case (HORIZON_ON):
-      rcData[AUX1] = 2000;       //Set spoofed RX value for horizon channel
+      //rcData[AUX1] = 2000;       //Set spoofed RX value for horizon channel
       SerialWrite(1, newOrder);  //Send back horizon_on value to confirm order received
       rcOptions[BOXHORIZON] = 1; //Toggle change in flight mode
       break;
 
       case (HORIZON_OFF):
-      rcData[AUX1] = 1000;       //Set spoofed RX value for horizon channel
+      //rcData[AUX1] = 1000;       //Set spoofed RX value for horizon channel
       SerialWrite(1, newOrder);  //Send back horizon_off value to confirm order received
       rcOptions[BOXHORIZON] = 0; //Toggle change in flight mode
       break;
 
       case (BARO_ON):
-      rcData[AUX2] = 2000;      //Set spoofed RX value for baro channel
+      //rcData[AUX2] = 2000;      //Set spoofed RX value for baro channel
       rcOptions[BOXBARO] = 1;   //Send back baro_on value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (BARO_OFF):
-      rcData[AUX2] = 1000;      //Set spoofed RX value for baro channel
+      //rcData[AUX2] = 1000;      //Set spoofed RX value for baro channel
       rcOptions[BOXBARO] = 0;   //Send back baro_off value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (MAG_ON):
-      rcData[AUX3] = 2000;      //Set spoofed RX value for mag channel
+      //rcData[AUX3] = 2000;      //Set spoofed RX value for mag channel
       rcOptions[BOXMAG] = 1;    //Send back mag_on value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (MAG_OFF):
-      rcData[AUX3] = 1000;      //Set spoofed RX value for mag channel
+      //rcData[AUX3] = 1000;      //Set spoofed RX value for mag channel
       rcOptions[BOXMAG] = 0;    //Send back mag_off value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
