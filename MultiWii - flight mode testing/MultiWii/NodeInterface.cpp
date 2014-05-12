@@ -1,5 +1,6 @@
 
 #include "Arduino.h"
+#include "Alarms.h"
 #include "config.h"
 #include "def.h"
 #include "types.h"
@@ -31,55 +32,43 @@
 unsigned int lastOrder = 0;
 unsigned int newOrder = 1;
 
-void setMode(){
-  int t = 0;
-  t++;
-
-  if(!rcOptions[BOXHORIZON])
-    rcOptions[BOXHORIZON] = 1;
-  if(t>50000){
-    t = 0;
-    rcOptions[BOXHORIZON] = 0;
-  }
-}
-
 void checkNode(){
   if(SerialAvailable(1)>0){    //Bytes in the RX buffer
     newOrder = SerialRead(1);
     //if(newOrder != lastOrder){
     switch(newOrder){
       case (HORIZON_ON):
-      rcData[AUX1] = 2000;       //Set spoofed RX value for horizon channel
+      //rcData[AUX1] = 2000;       //Set spoofed RX value for horizon channel
       SerialWrite(1, newOrder);  //Send back horizon_on value to confirm order received
       rcOptions[BOXHORIZON] = 1; //Toggle change in flight mode
       break;
 
       case (HORIZON_OFF):
-      rcData[AUX1] = 1000;       //Set spoofed RX value for horizon channel
+      //rcData[AUX1] = 1000;       //Set spoofed RX value for horizon channel
       SerialWrite(1, newOrder);  //Send back horizon_off value to confirm order received
       rcOptions[BOXHORIZON] = 0; //Toggle change in flight mode
       break;
 
       case (BARO_ON):
-      rcData[AUX2] = 2000;      //Set spoofed RX value for baro channel
+      //rcData[AUX2] = 2000;      //Set spoofed RX value for baro channel
       rcOptions[BOXBARO] = 1;   //Send back baro_on value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (BARO_OFF):
-      rcData[AUX2] = 1000;      //Set spoofed RX value for baro channel
+      //rcData[AUX2] = 1000;      //Set spoofed RX value for baro channel
       rcOptions[BOXBARO] = 0;   //Send back baro_off value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (MAG_ON):
-      rcData[AUX3] = 2000;      //Set spoofed RX value for mag channel
+      //rcData[AUX3] = 2000;      //Set spoofed RX value for mag channel
       rcOptions[BOXMAG] = 1;    //Send back mag_on value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
 
       case (MAG_OFF):
-      rcData[AUX3] = 1000;      //Set spoofed RX value for mag channel
+      //rcData[AUX3] = 1000;      //Set spoofed RX value for mag channel
       rcOptions[BOXMAG] = 0;    //Send back mag_off value to confirm order received
       SerialWrite(1, newOrder); //Toggle change in flight mode
       break;
@@ -110,7 +99,7 @@ void checkNode(){
        break;
        */
     }
-    //lastOrder = newOrder;
+    lastOrder = newOrder;
     //}
   }
 }
