@@ -31,6 +31,7 @@ November  2013     V2.3
 
 int waitRound = 0;
 byte temp;
+byte ackFlag = 0;
 
 
 /*********** RC alias *****************/
@@ -960,7 +961,7 @@ void loop () {
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
     */
 
-    checkNode(); //If there is new data fromk UART, change rcOptions
+    ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
     
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC

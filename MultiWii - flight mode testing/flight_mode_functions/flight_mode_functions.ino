@@ -41,13 +41,13 @@ const byte BARO_OFF	 = 0x28;
 const byte MAG_ON       =  0x33;
 const byte MAG_OFF	 = 0x32;
 
-unsigned int ARM_STATUS = MOTOR_DISARM;
-unsigned int ANGLE_MODE = ANGLE_OFF;
-unsigned int HORIZON_MODE = HORIZON_OFF;
-unsigned int BARO_MODE = BARO_OFF;
-//unsigned int HEADFREE_MODE = HEADFREE_OFF;
-//unsigned int HEADADJ_MODE = HEADADJ_OFF;
-//unsigned int FAILSAFE_MODE = FAILSAFE_OFF;
+byte ARM_STATUS = MOTOR_DISARM;
+byte ANGLE_MODE = ANGLE_OFF;
+byte HORIZON_MODE = HORIZON_OFF;
+byte BARO_MODE = BARO_OFF;
+//byte HEADFREE_MODE = HEADFREE_OFF;
+//byte HEADADJ_MODE = HEADADJ_OFF;
+//byte FAILSAFE_MODE = FAILSAFE_OFF;
 
 int temp = 0;
 boolean modeChanged = false;

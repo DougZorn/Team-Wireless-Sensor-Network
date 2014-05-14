@@ -11,7 +11,7 @@
 #include "Sensors.h"
 #include "Serial.h"
 
-void checkNode();
+int checkNode();
 void maintainNode();
 
 #endif
