@@ -1387,8 +1387,8 @@ void loop () {
   while(SerialAvailable(1)){
     SerialWrite(1,SerialRead(1));  
   }
-
-  if( waitRound >= 50){
+/*
+  if( waitRound >= 20){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
       
       SerialWrite(1,0x80);  //startByte
@@ -1408,6 +1408,6 @@ void loop () {
       waitRound = 0;
     }
   }
-  waitRound++;
+  waitRound++;*/
   
 }

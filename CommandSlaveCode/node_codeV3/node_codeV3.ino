@@ -830,7 +830,9 @@ void loop(){
         //spin clockwise (when looking down on copter)
         
         // might want a function to determine how fast to spin
-        turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
+        //turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
+        
+        turn =0x07;
         writeRudder(turn);
         
         Serial.print("turn , <= 0: ");
@@ -840,7 +842,8 @@ void loop(){
         
       }else{
         //spin counter clockwise
-        turn = 0x0A - byte(roundUp((float(abs(myData.heading - angle)/180))*3));
+        //turn = 0x0A - byte(roundUp((float(abs(myData.heading - angle)/180))*3));
+        turn =0x0D;
         writeRudder(turn);
         
         

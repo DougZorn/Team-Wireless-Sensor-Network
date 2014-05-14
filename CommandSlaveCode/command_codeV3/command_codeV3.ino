@@ -250,7 +250,11 @@ int userCom(){
       sendPacket(0,argName,0,0,205,1);
       Serial.println("You typed flight");
       digitalWrite(ledPin, LOW);
-      return 1;
+      if(argName==255){
+        return 1;
+      }else{
+        return 0;
+      }
     }                                  
     /*
     else if(!strcmp(arg1, "reset")){    //might add reset command
