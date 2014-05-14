@@ -25,6 +25,7 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
 
@@ -67,6 +68,7 @@ void sendBit32(int ID, int32_t data32){
   temp = data32;
   SerialWrite(1,temp);
 }
+byte ackFlag = 0;
 
 
 /*********** RC alias *****************/
@@ -985,13 +987,19 @@ void loop () {
         AccInflightCalibrationSavetoEEProm = 1;
       }
     #endif
-
+     
+    //maintainNode(); //maintain signal values for current flight mode status
+    
     uint16_t auxState = 0;
+    /*
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
-      rcOptions[i] = (auxState & conf.activate[i])>0;
+      rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
+    */
 
+    ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
+    
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
@@ -1384,20 +1392,15 @@ void loop () {
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
   
-  while(SerialAvailable(1)){
-    SerialWrite(1,SerialRead(1));  
-  }
-/*
-  if( waitRound >= 20){
+  if(( waitRound >= 20)||(ackFlag != 0x00)){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
       
       SerialWrite(1,0x80);  //startByte
       
-      sendBit16(1, imu.magADC[0]);  
-      
-      sendBit16(2, imu.magADC[1]);
-    
-      sendBit16(3, imu.magADC[2]);    
+      if(ackFlag != 0x00){
+        SerialWrite(1,64);
+        SerialWrite(1,ackFlag);
+      }
       
       sendBit16(4, att.heading);  
       
@@ -1408,6 +1411,6 @@ void loop () {
       waitRound = 0;
     }
   }
-  waitRound++;*/
+  waitRound++;
   
 }

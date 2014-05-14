@@ -134,6 +134,98 @@ byte lastHeardFrom;
 unsigned int temp;
 int goodMsg;
 
+//Variables for mode
+const boolean mode_on = true;
+const boolean mode_off = false;
+
+boolean horizonMode_Master;    //case 1
+boolean baroMode_Master;      //case 2
+boolean magMode_Master;        //case 3
+
+boolean horizonMode_Control;
+boolean baroMode_Control;
+boolean magMode_Control;
+
+byte readMaster_Mode(int modeID){  //read mode that master wants to be in
+  switch(modeID){
+    case 1: 
+      if(horizonMode_Master){
+        return 0x21;
+      }else{
+        return 0x20;
+      }
+    case 2:
+      if(baroMode_Master){
+        return 0x2B;
+      }else{
+        return 0x2A;
+      }
+    case 3:
+      if(magMode_Master){
+          return 0x35;
+        }else{
+          return 0x34;
+        }
+    default :
+      return 1;    //not valid statement s returns 0
+  }
+}
+
+int changeMode(byte ackType){  //used when ack and or when trying to change mode
+  switch(ackType){
+    case 0x1E: //horizon
+      horizonMode_Control = mode_off;
+      break;
+    case 0x1F:
+      horizonMode_Control = mode_on;
+      break;
+    case 0x20: 
+      horizonMode_Master = mode_off;
+      break;
+    case 0x21:
+      horizonMode_Master = mode_on;
+      break;
+    case 0x28: //baro 
+      baroMode_Control = mode_off;
+      break;
+    case 0x29:
+      baroMode_Control = mode_on;
+      break;
+    case 0x2A: 
+      baroMode_Master = mode_off;
+      break;
+    case 0x2B:
+      baroMode_Master = mode_on;
+      break;
+    case 0x32: //mag
+      magMode_Control = mode_off;
+      break;
+    case 0x33:
+      magMode_Control = mode_on;
+      break;
+    case 0x34: 
+      magMode_Master = mode_off;
+      break;
+    case 0x35:
+      magMode_Master = mode_on;
+      break;
+    default :
+      return 1;
+  }
+  return 0;
+}
+
+int modeAdjust(){
+  if(horizonMode_Master != horizonMode_Control){    //using else if because we want to assert one at a time
+    //send turn on and off depending on what it is, - 0x02 because master mode on off is always +2 in byte compare to control
+    mySerial.write((readMaster_Mode(1) - 0x02));    
+  }else if(baroMode_Master != baroMode_Control){ 
+    mySerial.write((readMaster_Mode(2) - 0x02)); 
+  }else if(magMode_Master != magMode_Control){
+    mySerial.write((readMaster_Mode(3) - 0x02)); 
+  }
+}
+
 //Converts values from 0-255 to (-)127-128
 int byteToInt(byte input){
   if(input > 128){
@@ -251,6 +343,7 @@ int storeData16(int dType, int16_t data16){//determine what type of int 16 data 
       break;
     case 4:
       myData.heading = data16;
+      break;
     default :
       return 1;
   }
@@ -262,9 +355,6 @@ int storeData32(int dType, int32_t data32){  //determine what type of int 32 dat
     case 32:
       myData.EstAlt = data32;
       break;
-    case 3:
-      Serial.println("case 3");
-    break;
     default :
       return 1;
   }
@@ -291,6 +381,8 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
   byte endByte  = 0xC0;     //Byte indicating the End of chain of packets
   int16_t tempData16;                   
   int32_t tempData32;
+  byte tempAck;
+  
   //int flag = 0;
   int place = 0;            //Locate where packet in array starts, eliminates garbage in front of start if any
   
@@ -308,7 +400,8 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
   place++;            //move to next byte after start packet
   
   do{
-    if((sensorType = array[place]) < 32){        //look at the type of data in the packet, there are usually multiple different types, all type < 32 are or int16 sensors
+    sensorType = array[place];
+    if(sensorType < 32){        //look at the type of data in the packet, there are usually multiple different types, all type < 32 are or int16 sensors
       place++;                                   // move there
       tempData16 = array[place];                //assemble them because they are int16 or int 32 and uart only sents bytes
       
@@ -325,7 +418,7 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
       //Serial.print(" Data: ");
       //Serial.println(tempData16, HEX);
       storeData16(sensorType, tempData16);    //store the assembled data into cor
-    }else{                                    //if int32 sensors
+    }else if(sensorType <64){                                    //if int32 sensors
       place++;                               //assemble
       tempData32 = array[place];
       tempData32 = tempData32 << 8;
@@ -345,6 +438,10 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
       //Serial.print(" Data: ");
       //Serial.println(tempData32, HEX);
       storeData32(sensorType, tempData32);    //store it in correct place
+    }else{
+      place++;                                   // move there
+      tempAck = array[place];          
+      changeMode(tempAck);
     }
      
     place++;
@@ -367,6 +464,7 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
 void resetData(){    //used to initialize data and reset when reseting all nodes, puts all data to default values
   digitalWrite(ledPin, LOW);
   initData();
+  
   gotNewMsg = false;
   RSSIArrayFull = false;
   wantNewMsg = true;
@@ -382,6 +480,15 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
   Flight = 0;
   atLevel =false;
   unsigned long lastTime;
+  
+  horizonMode_Master = mode_off;
+  baroMode_Master = mode_off;
+  magMode_Master = mode_off;
+
+  horizonMode_Control = mode_off;
+  baroMode_Control = mode_off;
+  magMode_Control = mode_off;
+  
   for(int x = 0; x<NUM_NODES; x++){
     rssiPtr[x] = 0;
     rssiAvg[x] = 0;
@@ -978,5 +1085,52 @@ void loop(){
   //Serial.println(Flight, DEC);
   
   //Serial.println("OutLoop");
+  
+  /***************************** Mode Handling *******************************************/
+
+  Serial.println("");
+  Serial.print("changeMode(0x21): ");
+  Serial.println(changeMode(0x21), DEC);
+  Serial.print("changeMode(0x2B): ");
+  Serial.println(changeMode(0x2B), DEC);
+  
+  modeAdjust();
+  
+  Serial.print("Horizon: master - control : ");
+  if(horizonMode_Master){
+    Serial.print("true - ");
+  }else{
+    Serial.print("false - ");
+  }
+  if(horizonMode_Control){
+    Serial.println("true");
+  }else{
+    Serial.println("false");
+  }
+  
+  Serial.print("Baro: master - control : ");
+  if(baroMode_Master){
+    Serial.print("true - ");
+  }else{
+    Serial.print("false - ");
+  }
+  if(baroMode_Control){
+    Serial.println("true");
+  }else{
+    Serial.println("false");
+  }
+  
+  Serial.print("Mag: master - control : ");
+  if(magMode_Control){
+    Serial.print("true - ");
+  }else{
+    Serial.print("false - ");
+  }
+  if(magMode_Control){
+    Serial.println("true");
+  }else{
+    Serial.println("false");
+  }
+  
 }
 
