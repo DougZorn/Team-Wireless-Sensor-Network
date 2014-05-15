@@ -25,7 +25,6 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
-#include "NodeInterface.h"
 #include "Ultrasonic.h"
 
 #include <avr/pgmspace.h>
