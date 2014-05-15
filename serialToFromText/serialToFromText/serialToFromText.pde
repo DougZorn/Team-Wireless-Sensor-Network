@@ -15,9 +15,10 @@ String line;
 
 //Reading from Serial variables
 PrintWriter writer;
-File file = new File(
+File file = new File("testingFileFunction.txt");
 boolean endReached = false;
 String input = null;
+String serialInput;
 String[] serialPieces;
 
 //Keyboard input variables
@@ -29,6 +30,12 @@ char[] keyInput = {
 int rounds = -1;
 Serial myPort;
 
+//Transmitting Typed Commands
+boolean haveNewOrders = false;
+String[] ordersArray = {};
+String[] emptyStringArray = {};
+String[] completeInput = {};
+char[] emptyCharArray = {};
 
 void setup() {
   println(Serial.list());
@@ -42,7 +49,7 @@ void setup() {
 void draw() {
   switch(state) {
   case INSPECTSERIAL:
-    println("inspectSerial state");
+   // println("inspectSerial state");
 
     if (myPort.available() > 0) {
       serialInput = myPort.readStringUntil('\n');
@@ -65,17 +72,17 @@ void draw() {
           }
           //otherwise something went wrong with the round numbers
           else {
-            println("Error: Expected round + 1 from Serial, found " + int(pieces[1])))
-            }
-            //Starting or continuing, you always need to start a new file before printing to a text file
+            println("Error: Expected round + 1 from Serial, found " + int(pieces[1]));
           }
+          //Starting or continuing, you always need to start a new file before printing to a text file
         }
       }
-      break;
+    }
+    break;
 
 
   case READSERIAL:
-    println("readSerial state");
+    //println("readSerial state");
     writer = createWriter("Serialoutput.txt");
 
     print(int(serialPieces[0]));
@@ -88,8 +95,10 @@ void draw() {
 
     while (myPort.available () > 0) {
       serialInput = myPort.readStringUntil('\n');
+
+      if (serialInput != null) break;
       serialPieces = split(serialInput, ' ');
-      
+
       printToText(serialPieces);
 
       if (int(trim(serialPieces[0])) == -4) break;
@@ -101,7 +110,7 @@ void draw() {
 
 
   case INSPECTTEXT:
-    println("inspectText state");
+    //println("inspectText state");
     //Look for new round in first line of text
     reader = createReader("Routput.txt");
     line = getNextLine(reader);
@@ -133,7 +142,7 @@ void draw() {
 
 
   case READTEXT:
-    println("readText state");
+    //println("readText state");
     //Already have the first line, print it
     print(int(pieces[0]));
     print(" ");
@@ -149,14 +158,24 @@ void draw() {
       if (line == null) break;
       pieces = split(line, " ");
 
-      printToSerial(pieces);
+      if (haveNewOrders && int(trim(pieces[0])) == -4) {
+        for(int i = 0; i < ordersArray.length; i++){
+          myPort.write(trim(ordersArray[i]));
+        }
+        
+        printToSerial(pieces);
+        ordersArray = emptyStringArray;
+      }else{
+        printToSerial(pieces);
+      }
     }
+
+
     state = INSPECTSERIAL;
     break;
 
-
   default:
-    println("default");
+    println("default state");
     break;
   }
 }
@@ -164,18 +183,24 @@ void draw() {
 void printToText(String[] in) {
   for (int i = 0; i < in.length; i++) {
     writer.print(int(in[i]));
-    print(int(in[i]) + " ");
-    if (i  != in.length-1) writer.print(" ");
+    print(int(in[i]));
+    if (i  != in.length-1){
+      writer.print(" ");
+      print(" "); 
+      }
   }
   println("");
   //possibly flush here? stub
 }
 
-printToSerial(String[] in){
+void printToSerial(String[] in) {
   for (int i = 0; i < in.length; i++) {
     myPort.write(int(in[i]));
-    print(int(in[i]) + " ");
-    if (i  != in.length-1) myPort.write(" ");
+    print(int(in[i]));
+    if (i  != in.length-1){
+      myPort.write(" ");
+      print(" ");
+    }
   }
   println("");
 }
@@ -206,19 +231,26 @@ String getNextLine(BufferedReader br) {
 void keyPressed() {
   keyInput = append(keyInput, key); 
   if (key == ENTER) {
+    haveNewOrders = true;
+
     //compile entered keys into a string called "completeCommand"
-    String[] completeInput = {
-    };
+    completeInput = emptyStringArray;
     for (int i = 0; i < keyInput.length; i++) {
       completeInput = append(completeInput, str(keyInput[i]));
     }
-    String completeCommand = join(completeInput, "");
+    //STUB can strings be interpretted by the command node, or should I convert to a number, then convert back in the command node?
+    String completeCommand = "-5 " + join(completeInput, "");
+    ordersArray = append(ordersArray, completeCommand);
     println(completeCommand);
 
+    for(int i = 0; i < ordersArray.length; i++){
+      print("{");
+      print(trim(ordersArray[i]));
+      println("}");
+    }
+
     //..and empty array of entered input
-    char[] newKeyInput = {
-    };
-    keyInput = newKeyInput;
+    keyInput = emptyCharArray;
   }
   else {
     //Print entire set of entered keys since last ENTER key hit
