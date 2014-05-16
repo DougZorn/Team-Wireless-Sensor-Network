@@ -27,6 +27,7 @@ int ledPin = 4;
 const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
 const unsigned long TIMEOUT_P = 10; 
 
+
 //At the right height level
 boolean atLevel;
 
@@ -44,6 +45,12 @@ boolean RSSIArrayFull;
 
 //flag for being in air
 int Flight;
+
+//holds current ACK
+byte currACK;
+
+//holds previous ACK
+byte prevACK;
 
 //the distance between desire and current location before actually changing in INCHES
 const int NEARTOLERANCE = 5;
@@ -73,6 +80,9 @@ const int CMD_TYPE = 4;
 
 //This is how many times to resend all data, for redundancy.  Arbitrarily set to 4
 const int REDUNDANCY = 4; 
+
+//Uart Timers
+unsigned long reqTime;
 
 
 //A bunch of globals.
@@ -146,28 +156,46 @@ boolean horizonMode_Control;
 boolean baroMode_Control;
 boolean magMode_Control;
 
-byte readMaster_Mode(int modeID){  //read mode that master wants to be in
+byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to be in
   switch(modeID){
     case 1: 
-      if(horizonMode_Master){
+      if(!strcmp(arg, "on" )){
         return 0x21;
-      }else{
+      }else if(!strcmp(arg, "off" )){
         return 0x20;
+      }else{
+        if(horizonMode_Master){
+          return 0x21;
+        }else{
+          return 0x20;
+        }
       }
     case 2:
-      if(baroMode_Master){
+      if(!strcmp(arg, "on" )){
         return 0x2B;
-      }else{
+      }else if(!strcmp(arg, "off" )){
         return 0x2A;
+      }else{
+        if(baroMode_Master){
+          return 0x2B;
+        }else{
+          return 0x2A;
+        }
       }
-    case 3:
-      if(magMode_Master){
+    case 3:      
+      if(!strcmp(arg, "on" )){
+        return 0x35;
+      }else if(!strcmp(arg, "off" )){
+        return 0x34;
+      }else{
+        if(magMode_Master){
           return 0x35;
         }else{
           return 0x34;
         }
+      }
     default :
-      return 1;    //not valid statement s returns 0
+      return 0x01;    //not valid statement s returns 0
   }
 }
 
@@ -218,11 +246,11 @@ int changeMode(byte ackType){  //used when ack and or when trying to change mode
 int modeAdjust(){
   if(horizonMode_Master != horizonMode_Control){    //using else if because we want to assert one at a time
     //send turn on and off depending on what it is, - 0x02 because master mode on off is always +2 in byte compare to control
-    mySerial.write((readMaster_Mode(1) - 0x02));    
+    mySerial.write((readMaster_Mode(1, "NULL") - 0x02));    
   }else if(baroMode_Master != baroMode_Control){ 
-    mySerial.write((readMaster_Mode(2) - 0x02)); 
+    mySerial.write((readMaster_Mode(2, "NULL") - 0x02)); 
   }else if(magMode_Master != magMode_Control){
-    mySerial.write((readMaster_Mode(3) - 0x02)); 
+    mySerial.write((readMaster_Mode(3, "NULL") - 0x02)); 
   }
 }
 
@@ -381,7 +409,6 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
   byte endByte  = 0xC0;     //Byte indicating the End of chain of packets
   int16_t tempData16;                   
   int32_t tempData32;
-  byte tempAck;
   
   //int flag = 0;
   int place = 0;            //Locate where packet in array starts, eliminates garbage in front of start if any
@@ -440,8 +467,11 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
       storeData32(sensorType, tempData32);    //store it in correct place
     }else{
       place++;                                   // move there
-      tempAck = array[place];          
-      changeMode(tempAck);
+      currACK = array[place];          
+      if(currACK != prevACK){
+        changeMode(currACK);
+        prevACK = currACK;
+      }
     }
      
     place++;
@@ -480,6 +510,9 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
   Flight = 0;
   atLevel =false;
   unsigned long lastTime;
+  
+  prevACK = 0x00;
+  currACK = 0x00;
   
   horizonMode_Master = mode_off;
   baroMode_Master = mode_off;
@@ -1087,12 +1120,26 @@ void loop(){
   //Serial.println("OutLoop");
   
   /***************************** Mode Handling *******************************************/
+/*
+  Serial.println("");
+  Serial.print("readMaster_Mode(1,on): ");
+  Serial.println(readMaster_Mode(1,"on"), HEX);
+  Serial.print("readMaster_Mode(1,off): ");
+  Serial.println(readMaster_Mode(1,"off"), HEX);
+  
+  changeMode(0x21);
+  Serial.print("readMaster_Mode(1,NULL): ");
+  Serial.println(readMaster_Mode(1,"NULL"), HEX);
+  changeMode(0x20);
+  Serial.print("readMaster_Mode(1,NULL): ");
+  Serial.println(readMaster_Mode(1,"NULL"), HEX);
+  */
 
   Serial.println("");
   Serial.print("changeMode(0x21): ");
-  Serial.println(changeMode(0x21), DEC);
+  Serial.println(changeMode(readMaster_Mode(1,"on")), DEC);
   Serial.print("changeMode(0x2B): ");
-  Serial.println(changeMode(0x2B), DEC);
+  Serial.println(changeMode(readMaster_Mode(2,"on")), DEC);
   
   modeAdjust();
   

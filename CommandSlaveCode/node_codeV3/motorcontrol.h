@@ -51,7 +51,7 @@ void ArmMotors(void)
 {
   writeThrust(7);  
   writeRudder(14);
-  delay(250);
+  delay(25);
   writeRudder(10);    
   writeThrust(8);
 }

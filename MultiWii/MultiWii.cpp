@@ -69,7 +69,7 @@ void sendBit32(int ID, int32_t data32){
   SerialWrite(1,temp);
 }
 byte ackFlag = 0;
-
+byte constFlag = 0;
 
 /*********** RC alias *****************/
 
@@ -1398,9 +1398,12 @@ void loop () {
       SerialWrite(1,0x80);  //startByte
       
       if(ackFlag != 0x00){
-        SerialWrite(1,64);
-        SerialWrite(1,ackFlag);
+        constFlag = ackFlag;
       }
+      
+
+      SerialWrite(1,64);
+      SerialWrite(1,constFlag);
       
       sendBit16(4, att.heading);  
       
