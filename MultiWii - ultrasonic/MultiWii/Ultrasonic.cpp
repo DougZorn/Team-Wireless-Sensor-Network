@@ -37,7 +37,7 @@ void sonic_update(){
   }
   averageSonic = sonicTotal / numOfReadings; // calculate the average distance
   
-  displayValue = 1000 + (averageSonic); //Formats signal reading to display on RX bars
+  displayValue = 1000 + (averageSonic); ///0.0033); //Formats signal reading to display on RX bars in centimeters
   rcData[AUX4] = displayValue; 
   
 }
