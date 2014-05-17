@@ -197,14 +197,20 @@ byte roundUp(float input){
 
 int userCom(){
   char userCommand[500];
-  char *arg1;
-  char *arg2;
+  char snippedCommand[500];
+  char *arg1, *arg2, *arg3, *arg4;
+  boolean data_command_flag = true;
+  int sequenceNumber;
+  int endSequenceNumber;
+  int nodeNum;
+  
   digitalWrite(ledPin, LOW);
   if(Serial.available()){
     arg1 = NULL;
     arg2 = NULL;  //use for later improve arguments
     for(int x =0; x<500;x++){
       userCommand[x] = NULL;
+      snippedCommand[x] = NULL;
     }
     int x =0;
     delay(20);
@@ -213,67 +219,146 @@ int userCom(){
     }
     while(Serial.available());
 
-    arg1 = strtok(userCommand, " :\n\r");
-    arg2 = strtok(NULL, " :\n\r");        //need further expansion of 
-  
-    String argString = String(arg2);
-    int argName = argString.toInt();
+    int mostRecent3 = 0;
+    int secondMostRecent3 = 0;
+    int mostRecent4 = 0;
     
-    if(!strcmp(arg1, "shutdown") && ((argName<NUM_NODES)||(argName==255))){
-      digitalWrite(ledPin, HIGH);
-      for(int i =0; i>1000;i++){
-        delay(10);
-        sendPacket(0,argName,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
-      }  
-      sendPacket(0,argName,0,0,203,1); 
-      Serial.println("You typed shutdown");
-      digitalWrite(ledPin, LOW);
-      return 0;
-    }
-    else if(!strcmp(arg1, "land") && ((argName<NUM_NODES)||(argName==255))){
-      digitalWrite(ledPin, HIGH);
-      for(int i =0; i>1000;i++){
-        delay(10);
-        sendPacket(0,argName,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
+    for(int i = 0; userCommand[i+1] != NULL; i++){
+      if(userCommand[i] == '-' && userCommand[i+1] == '3') {
+        secondMostRecent3 = mostRecent3;
+        mostRecent3 = i;
       }
-      sendPacket(0,argName,0,0,204,1); 
-      Serial.println("You typed land");
-      digitalWrite(ledPin, LOW);
-      return 0;
+      if(userCommand[i] == '-' && userCommand[i+1] == '4') mostRecent4 = i;
     }
-    else if(!strcmp(arg1, "flight") && ((argName<NUM_NODES)||(argName==255))){
-      digitalWrite(ledPin, HIGH);
-      for(int i =0; i>1000;i++){
-        delay(10);
-        sendPacket(0,argName,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
-      } 
-      sendPacket(0,argName,0,0,205,1);
-      Serial.println("You typed flight");
-      digitalWrite(ledPin, LOW);
-      if(argName==255){
-        return 1;
-      }else{
+    
+    //you have a partial message, so you need the previous full message
+    if(mostRecent3 > mostRecent4) {
+      mostRecent3 = secondMostRecent3;
+      Serial.print("Partial message error");
+    }
+    
+    
+    for(int i = mostRecent3; i < mostRecent4; i++){
+       snippedCommand[i] = userCommand[i];
+    }
+    
+    
+    //arg1 is line
+    //arg2 is first entry in line
+    
+    
+      arg1 = strtok(snippedCommand, "\n");
+    while(1){
+      arg1 = strtok(NULL, "\n");
+      if(arg1 == NULL) break;
+      
+      arg2 = strtok(arg1, " ");
+      if(!strcmp(arg2, "-1")){
+        //handle next/all
+        //This is where you'd parse in different values for new nodes
+        //or for new anchor node locations, but we aren't having mobile anchor nodes
+        //nor live additions of nodes in the network at this point
+        /*
+        arg3 = strtok(NULL, " ");
+        if(!strcmp(arg3, "0")){
+          numNodes = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "1")){
+          x1 = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "2")){
+          y3 = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "3")){
+          x2 = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "4")){
+          y2 = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "5")){
+          x3 = atoi(strtok(NULL, " "));
+        }else if(!strcmp(arg3, "6")){
+          y1 = atoi(strtok(NULL, " "));
+        }else {
+          print("error processing -1 values");
+        }
+        */
+      }else if(!strcmp(arg2, "-3")){
+        //handle next/all
+        sequenceNumber = atoi(strtok(NULL, " "));
+      }else if(!strcmp(arg2, "-4")){
+        //handle next/all
+        endSequenceNumber = atoi(strtok(NULL, " "));
+      }else if(atoi(arg2) >= 0){
+        nodeNum = atoi(arg2);
+      
+        currLoc[nodeNum][0] = atoi(strtok(NULL, " "));
+        currLoc[nodeNum][1] = atoi(strtok(NULL, " "));
+      }else if(!strcmp(arg2, "-5")){
+        //handle next/all
+        
+        
+        arg3 = strtok(NULL, " ");
+      arg4 = strtok(NULL, " ");
+      
+      String argString = String(arg4);
+      int argName = argString.toInt();
+      
+      if(!strcmp(arg3, "shutdown") && ((argName<NUM_NODES)||(argName==255))){
+        digitalWrite(ledPin, HIGH);
+        for(int i =0; i>1000;i++){
+          delay(10);
+          sendPacket(0,argName,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
+        }  
+        sendPacket(0,argName,0,0,203,1); 
+        Serial.println("You typed shutdown");
+        digitalWrite(ledPin, LOW);
         return 0;
       }
-    }                                  
-    /*
-    else if(!strcmp(arg1, "reset")){    //might add reset command
-      digitalWrite(ledPin, HIGH);
-      for(int i =0; i>1000;i++){
-        delay(1);
-        sendPacket(0,255,0,0,200,0);                            
-      } 
-      sendPacket(0,255,0,0,200,1);
-      Serial.println("You typed reset");
-      digitalWrite(ledPin, LOW);
-      return 1;
-    }*/
-    else{
-      return 2;       //if wrong command, do nothing
+      else if(!strcmp(arg3, "land") && ((argName<NUM_NODES)||(argName==255))){
+        digitalWrite(ledPin, HIGH);
+        for(int i =0; i>1000;i++){
+          delay(10);
+          sendPacket(0,argName,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
+        }
+        sendPacket(0,argName,0,0,204,1); 
+        Serial.println("You typed land");
+        digitalWrite(ledPin, LOW);
+        return 0;
+      }
+      else if(!strcmp(arg3, "flight") && ((argName<NUM_NODES)||(argName==255))){
+        digitalWrite(ledPin, HIGH);
+        for(int i =0; i>1000;i++){
+          delay(10);
+          sendPacket(0,argName,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
+        } 
+        sendPacket(0,argName,0,0,205,1);
+        Serial.println("You typed flight");
+        digitalWrite(ledPin, LOW);
+        if(argName==255){
+          return 1;
+        }else{
+          return 0;
+        }
+      }         
+      }else{
+        Serial.print("read in error");
+      }
     }
   }
-  return 2;          //if no command, do nothing
 }
+      
+      
+      
+                                       
+      /*
+      else if(!strcmp(arg1, "reset")){    //might add reset command
+        digitalWrite(ledPin, HIGH);
+        for(int i =0; i>1000;i++){
+          delay(1);
+          sendPacket(0,255,0,0,200,0);                            
+        } 
+        sendPacket(0,255,0,0,200,1);
+        Serial.println("You typed reset");
+        digitalWrite(ledPin, LOW);
+        return 1;
+      }*/
+
 
 /*
 //stub have this function passing array and only output status int
@@ -520,7 +605,7 @@ void loop(){
     distances[MY_NAME][currMsg[SENDER]] = roundUp(log(float(rssiAvg[currMsg[SENDER]])/95)/log(0.99));
 
   }
-
+/*
   stuckUser =0;
   do{
     int mode = userCom();
@@ -534,6 +619,8 @@ void loop(){
 
   }
   while(stuckUser == 1);
+*/
+
 
   //userCom() outputs
   //no new command is 0
