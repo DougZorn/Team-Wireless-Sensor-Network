@@ -228,8 +228,7 @@ String getNextLine(BufferedReader br) {
 }
 
 
-void keyPressed() {
-  keyInput = append(keyInput, key); 
+void keyPressed() { 
   if (key == ENTER) {
     haveNewOrders = true;
 
@@ -238,11 +237,20 @@ void keyPressed() {
     for (int i = 0; i < keyInput.length; i++) {
       completeInput = append(completeInput, str(keyInput[i]));
     }
-    //STUB can strings be interpretted by the command node, or should I convert to a number, then convert back in the command node?
-    String completeCommand = "-5 " + join(completeInput, "");
-    ordersArray = append(ordersArray, completeCommand);
-    println(completeCommand);
 
+    //test for valid command
+    String[] test = split(join(completeInput,""), ' ');
+    println("test[0] is: {" + test[0] + "}");
+    if(trim(test[0]).equals("shutdown") || test[0].equals("node") || test[0].equals("flight") || test[0].equals("land")){
+      String completeCommand = "-5 " + join(completeInput, "");
+      ordersArray = append(ordersArray, completeCommand);
+      println("List of orders:");
+      println(completeCommand);
+    }else{
+      println("Typo: you typed invalid command {" + join(completeInput,"") + "}");
+    }
+    
+    
     for(int i = 0; i < ordersArray.length; i++){
       print("{");
       print(trim(ordersArray[i]));
@@ -253,8 +261,11 @@ void keyPressed() {
     keyInput = emptyCharArray;
   }
   else {
+    keyInput = append(keyInput, key);
     //Print entire set of entered keys since last ENTER key hit
-    println(keyInput);
+    for(int i = 0; i < keyInput.length; i++){
+      print(keyInput[i]);
+    }
     println("");
   }
 }
