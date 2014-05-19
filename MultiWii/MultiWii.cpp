@@ -323,7 +323,7 @@ int16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
 // *************************
 int16_t axisPID[3];
 int16_t motor[8];
-int16_t servo[8] = {1500,1500,1500,1500,1500,1500,1500,1000};
+int16_t servo[8] = {1536,1536,1536,1536,1536,1536,1500,1536};
 
 // ************************
 // EEPROM Layout definition
