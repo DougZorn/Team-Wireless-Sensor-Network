@@ -158,7 +158,7 @@ boolean magMode_Control;
 
 byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to be in
   switch(modeID){
-    case 1:                   //horizonMode
+    case 1: 
       if(!strcmp(arg, "on" )){
         return 0x21;
       }else if(!strcmp(arg, "off" )){
@@ -170,7 +170,7 @@ byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to b
           return 0x20;
         }
       }
-    case 2:                  //baroMode
+    case 2:
       if(!strcmp(arg, "on" )){
         return 0x2B;
       }else if(!strcmp(arg, "off" )){
@@ -182,7 +182,7 @@ byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to b
           return 0x2A;
         }
       }
-    case 3:                  //magMode
+    case 3:      
       if(!strcmp(arg, "on" )){
         return 0x35;
       }else if(!strcmp(arg, "off" )){
@@ -568,11 +568,6 @@ void setup(){
   Serial.println("After resetData");
   
   Serial.println("Out Setup");
-  
-  changeMode(readMaster_Mode(1,"on"));
-  
-  
-  
 }
 
 void loop(){
@@ -1066,42 +1061,29 @@ void loop(){
     //Serial.println("in flight");
     byte heightLevel = 0x0A;
 
-    int minHeight = 55; //in cm
-    int maxHeight = 65;     
+    int minHeight = 80; //in cm
+    int maxHeight = 90;     
    
     if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
-    
-      if(!baroMode_Control){
-        heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
-        writeThrust(heightLevel);
-      }
       
+      heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
+      writeThrust(heightLevel);
       Serial.print("Too low: ");
       //Serial.print(heightLevel,DEC);
     }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
-      changeMode(readMaster_Mode(2,"off"));
-      
-      if(!baroMode_Control){
-        heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
-        writeThrust(heightLevel);
-      }
-      
+      heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
+      writeThrust(heightLevel);
       Serial.print("Too High: ");
       //Serial.print(heightLevel,DEC);
-      
     }else{
       
       Serial.print("Just Right: ");
       //Serial.print(heightLevel,DEC);
-      if(!baroMode_Control){
-        changeMode(readMaster_Mode(2,"on"));
-      }
+      
+      writeThrust(heightLevel);        //keep current level
       atLevel =true;
     }
   }else if(Flight == 1){
-                                              
-    changeMode(readMaster_Mode(2,"off"));
-    
     if(myData.ultraSonic <= 21){    //if it is close to ground
       if(myData.EstAlt <5){        //it is right at top of ground
         writeThrust(0x07);          //turns to lowest settings
@@ -1152,7 +1134,7 @@ void loop(){
   Serial.print("readMaster_Mode(1,NULL): ");
   Serial.println(readMaster_Mode(1,"NULL"), HEX);
   */
-/*
+
   Serial.println("");
   Serial.print("changeMode(0x21): ");
   Serial.println(changeMode(readMaster_Mode(1,"on")), DEC);
@@ -1196,7 +1178,6 @@ void loop(){
   }else{
     Serial.println("false");
   }
-  */
   
 }
 
