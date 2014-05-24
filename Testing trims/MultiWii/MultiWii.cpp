@@ -25,7 +25,6 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
-#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
 
@@ -571,7 +570,6 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
-  Node_init();
   readGlobalSet();
   #ifndef NO_FLASH_CHECK
     #if defined(MEGA)
@@ -749,7 +747,6 @@ void go_disarm() {
 
 // ******** Main Loop *********
 void loop () {
-  checkNode();
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
   static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
@@ -781,8 +778,7 @@ void loop () {
   
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
-  #endif 
-
+  #endif
   if (currentTime > rcTime ) { // 50Hz
     rcTime = currentTime + 20000;
     computeRC();
@@ -953,7 +949,10 @@ void loop () {
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0;
-
+    
+    for(i = 0; i<8; i++){
+      rcData[i]-= 34;
+    }
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
@@ -1158,7 +1157,7 @@ void loop () {
       int16_t dif = att.heading - magHold;
       if (dif <= - 180) dif += 360;
       if (dif >= + 180) dif -= 360;
-      if ( f.SMALL_ANGLES_25 ) rcCommand[YAW] -= dif*conf.pid[PIDMAG].P8>>5;
+      //if ( f.SMALL_ANGLES_25 ) rcCommand[YAW] -= dif*conf.pid[PIDMAG].P8>>5;
     } else magHold = att.heading;
   #endif
 
