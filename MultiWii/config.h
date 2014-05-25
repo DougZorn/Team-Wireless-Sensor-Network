@@ -242,9 +242,9 @@
 
     /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
      * room for servo travel, then you must enable and set all three following options */
-     #define SERVO_MIN  {1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024}
-     #define  SERVO_MAX {2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048}
-     #define  SERVO_MID {1536, 1536, 1536, 1536, 1536, 1536, 1536, 1536} // (*)
+     //#define SERVO_MIN  {1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024}
+     //#define  SERVO_MAX {2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048}
+     //#define  SERVO_MID {1536, 1536, 1536, 1536, 1536, 1536, 1536, 1536} // (*)
      //#define FORCE_SERVO_RATES      {30,30,100,100,100,100,100,100} // 0 = normal, 1= reverse
 
   /***********************          Cam Stabilisation             ***********************/

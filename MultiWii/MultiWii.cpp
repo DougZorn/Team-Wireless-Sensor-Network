@@ -997,7 +997,9 @@ void loop () {
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
     */
-
+    for(int i = 0; i<8;i++){
+      rcData[i]-=34;
+    }
     ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
     
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false

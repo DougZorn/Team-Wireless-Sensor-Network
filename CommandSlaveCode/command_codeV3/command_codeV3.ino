@@ -221,14 +221,14 @@ int userCom(){
     while(Serial.available());
 
     // delay(200);
-    // Serial.print("I got ");
-    // Serial.print(userCommand);
-    // Serial.print("\n");
+     Serial.print("I got ");
+     Serial.print(userCommand);
+     Serial.print("\n");
 
     Serial.print("State 1\n");
 
-    /*
-    int mostRecent3 = 0;
+    
+     int mostRecent3 = 0;
      int secondMostRecent3 = 0;
      int mostRecent4 = 0;
      
@@ -246,15 +246,33 @@ int userCom(){
      Serial.print("Partial message error");
      }
      
-     
+     int countX = 0;
      for(int i = mostRecent3; i < mostRecent4; i++){
-     snippedCommand[i] = userCommand[i];
+     snippedCommand[countX++] = userCommand[i];
      }
+     
+    Serial.print("snippedCommand = ");
+    Serial.print(snippedCommand);
+    Serial.print("\n");
+     
+    Serial.print("mostRecent3 = ");
+    Serial.print(mostRecent3);
+    Serial.print("\n");
+    
+    Serial.print("mostRecent4 = ");
+    Serial.print(mostRecent4);
+    Serial.print("\n");
+    
+    Serial.print("secondMostRecent3 = ");
+    Serial.print(secondMostRecent3);
+    Serial.print("\n");
+
+
      
      Serial.print("State 2\n");
      //arg1 is line
      //arg2 is first entry in line
-     */
+     
 
   
   
@@ -265,7 +283,7 @@ int userCom(){
     Serial.print("\n");
 
 
-    arg1 = strtok_r(userCommand, "\n", &tempCommand1);
+    arg1 = strtok_r(snippedCommand, "\n", &tempCommand1);
 
     int lineCounter = 0;
     while(arg1 != NULL){
@@ -300,24 +318,40 @@ int userCom(){
         Serial.print("State Got -3\n");
 
         //handle next/all
-        //sequenceNumber = atoi(strtok(NULL, " "));
+        sequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
+        
+        Serial.print("sequenceNumber = ");
+        Serial.print(sequenceNumber);
+        Serial.print("\n");
       }
       else if(!strcmp(arg2, "-4")){
         //handle next/all
-        endSequenceNumber = atoi(strtok(NULL, " "));
-
+        endSequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
+        
         Serial.print("State Got -4\n");
+        
+        Serial.print("endSequenceNumber = ");
+        Serial.print(endSequenceNumber);
+        Serial.print("\n");
 
       }
-      else if(atoi(arg2) >= 0){
+      else if((nodeNum = atoi(arg2)) >= 0){
 
-        Serial.print("State Got arg>0\n");
+        //Serial.print("State Got arg>0\n");
 
         arg3 = strtok_r(NULL, " ", &tempCommand2);
         arg4 = strtok_r(NULL, " ", &tempCommand2);
         
         currLoc[nodeNum][0] = atoi(arg3);
         currLoc[nodeNum][1] = atoi(arg4);
+        
+        Serial.print("currLoc[nodeNum][0] = ");
+        Serial.print( currLoc[nodeNum][0]);
+        Serial.print("\n");
+        Serial.print("currLoc[nodeNum][1] = ");
+        Serial.print(currLoc[nodeNum][1]);
+        Serial.print("\n");
+        
       }
       else if(!strcmp(arg2, "-5")){
         //handle next/all

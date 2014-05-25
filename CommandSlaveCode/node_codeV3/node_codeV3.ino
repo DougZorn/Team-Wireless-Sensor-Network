@@ -568,6 +568,10 @@ void setup(){
   Serial.println("After resetData");
   
   Serial.println("Out Setup");
+  
+  changeMode(readMaster_Mode(1,"on"));
+  
+  modeAdjust();
 }
 
 void loop(){
@@ -892,11 +896,14 @@ void loop(){
   moveRequired = true;
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
-  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
+  
+  boolean notTest = false;
+  
+  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel && notTest){          //update the Data and return if success, Ultrasonic will update no matter what
     
-    writeRudder(0x0A);  //set netrual because random 
-    writeRoll(0x0A);
-    writePitch(0x0A);
+    writeRudder(0x0B);  //set netrual because random 
+    writeRoll(0x0B);
+    writePitch(0x0B);
     
     byte turn;
     
@@ -1015,7 +1022,7 @@ void loop(){
       if(tooClose){
         
         //Serial.println("too close");
-        writePitch(0x0A);    //if too close, stay on where it is
+        writePitch(0x0B);    //if too close, stay on where it is
       }else{
         
         //Serial.println("far");
@@ -1135,6 +1142,7 @@ void loop(){
   Serial.println(readMaster_Mode(1,"NULL"), HEX);
   */
 
+  /*
   Serial.println("");
   Serial.print("changeMode(0x21): ");
   Serial.println(changeMode(readMaster_Mode(1,"on")), DEC);
@@ -1178,6 +1186,6 @@ void loop(){
   }else{
     Serial.println("false");
   }
-  
+  */
 }
 
