@@ -59,10 +59,13 @@ void draw() {
       
       println("serial input " + serialInput);
       
-      /*
+      
       if (serialInput != null) {
         serialPieces = split(serialInput, ' ');
         if (int(trim(serialPieces[0])) == -3) {
+          state = READSERIAL;
+          
+          /*
           //if rounds haven't started yet, start them by saving current round number
           if (rounds <= 0) {
             state = READSERIAL;
@@ -81,10 +84,12 @@ void draw() {
           else {
             println("Error: Expected round + 1 from Serial, found " + int(pieces[1]));
           }
+          
+          */
           //Starting or continuing, you always need to start a new file before printing to a text file
         }
       }
-      */
+      
     }
     break;
 
@@ -101,7 +106,8 @@ void draw() {
     writer.print(" ");
     writer.print(int(serialPieces[1]));
 
-    while (myPort.available () > 0) {
+    //while (myPort.available () > 0) {
+    while(true){
       serialInput = myPort.readStringUntil('\n');
 
       if (serialInput != null) break;
@@ -114,6 +120,8 @@ void draw() {
 
     writer.flush();
     writer.close();
+    
+    state = INSPECTTEXT;
     break;
 
 
@@ -174,6 +182,7 @@ void draw() {
         
         printToSerial(pieces);
         ordersArray = emptyStringArray;
+        break;
       }else{
         printToSerial(pieces);
       }
@@ -253,7 +262,7 @@ void keyPressed() {
       completeInput = append(completeInput, str(keyInput[i]));
     }
 
-    myPort.write(join(completeInput,""));
+    //myPort.write(join(completeInput,""));
     
 
     //test for valid command

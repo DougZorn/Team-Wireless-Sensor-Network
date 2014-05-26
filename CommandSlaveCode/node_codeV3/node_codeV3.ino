@@ -866,8 +866,8 @@ void loop(){
       break; 
     }
   }
-  
-  /* //debugg code
+  /*
+   //debugg code
   while((prtSpot < curSpot)&& upDated){
     Serial.print(uartArray[prtSpot], HEX);
     Serial.print(" ");
@@ -890,6 +890,8 @@ void loop(){
     Serial.print(" ");
     Serial.print(myData.EstAlt,DEC);
     Serial.println(" ");
+    Serial.print(myData.ultraSonic,DEC);
+    Serial.println(" ");
   }*/
   
   //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
@@ -897,9 +899,7 @@ void loop(){
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
   
-  boolean notTest = false;
-  
-  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel && notTest){          //update the Data and return if success, Ultrasonic will update no matter what
+  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
     writeRudder(0x0B);  //set netrual because random 
     writeRoll(0x0B);
@@ -1066,19 +1066,26 @@ void loop(){
     
     atLevel =false;
     //Serial.println("in flight");
-    byte heightLevel = 0x0A;
+    byte heightLevel = 0x0B;
 
     int minHeight = 80; //in cm
     int maxHeight = 90;     
    
     if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
       
-      heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
+      //heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
+      heightLevel = 0x0C;
+      
       writeThrust(heightLevel);
       Serial.print("Too low: ");
       //Serial.print(heightLevel,DEC);
     }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
-      heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
+    
+    
+      //heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
+      
+      heightLevel = 0x0B;
+      
       writeThrust(heightLevel);
       Serial.print("Too High: ");
       //Serial.print(heightLevel,DEC);

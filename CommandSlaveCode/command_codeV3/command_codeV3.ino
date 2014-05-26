@@ -195,7 +195,7 @@ byte roundUp(float input){
 }
 
 
-int userCom(){
+void userCom(){
   char userCommand[500];
   char snippedCommand[500];
   char *tempCommand1, *tempCommand2;
@@ -373,7 +373,6 @@ int userCom(){
           sendPacket(0,argName,0,0,203,1); 
           Serial.println("You typed shutdown");
           digitalWrite(ledPin, LOW);
-          return 0;
         }
         else if(!strcmp(arg3, "land") && ((argName<NUM_NODES)||(argName==255))){
           digitalWrite(ledPin, HIGH);
@@ -384,7 +383,6 @@ int userCom(){
           sendPacket(0,argName,0,0,204,1); 
           Serial.println("You typed land");
           digitalWrite(ledPin, LOW);
-          return 0;
         }
         else if(!strcmp(arg3, "flight") && ((argName<NUM_NODES)||(argName==255))){
           digitalWrite(ledPin, HIGH);
@@ -395,12 +393,6 @@ int userCom(){
           sendPacket(0,argName,0,0,205,1);
           Serial.println("You typed flight");
           digitalWrite(ledPin, LOW);
-          if(argName==255){
-            return 1;
-          }
-          else{
-            return 0;
-          }
         }         
       }
       else{
@@ -620,6 +612,9 @@ void loop(){
     //receive "-4 [roundNumber]" back (signifies end of transmission)
     //For now, just delay for a second
     delay(1000);
+    
+    userCom();
+
 
     //Parse returned calculated values
     //for(int i = 0; i < NUM_NODES; i++){
@@ -691,7 +686,59 @@ void loop(){
 
   }
 
-  userCom();
+  //userCom();
+  
+  //Transmit data through serial
+     roundNumber = roundNumber + 1;
+     //Hard-coded formatting that R knows to accept, starting with round number and number of nodes
+     Serial.print("-3 ");
+     Serial.println(roundNumber);
+     Serial.print("-1 0 ");
+     Serial.println(NUM_NODES);
+     //Send anchor node values
+     Serial.print("-1 1 ");
+     Serial.println(x1);
+     Serial.print("-1 2 ");
+     Serial.println(y1);
+     Serial.print("-1 3 ");
+     Serial.println(x2);
+     Serial.print("-1 4 ");
+     Serial.println(y2);
+     Serial.print("-1 5 ");
+     Serial.println(x3);
+     Serial.print("-1 6 ");
+     Serial.println(y3);
+     //Send current distance values
+     for(int i = 0; i < NUM_NODES; i++){
+     for(int j = 0; j < NUM_NODES; j++){
+     Serial.print(i);
+     Serial.print(" ");
+     Serial.print(j);
+     Serial.print(" ");
+     Serial.println(distances[i][j]);
+     }
+     }
+     //Send desired values
+     for(int i = 0; i < NUM_NODES; i++){
+     Serial.print("-2 ");
+     Serial.print(i);
+     Serial.print(" 0 ");
+     Serial.println(desired[i][0]);
+     
+     Serial.print("-2 ");
+     Serial.print(i);
+     Serial.print(" 1 ");
+     Serial.println(desired[i][1]);
+     }
+     //Send round number again, as "end of serial transmission" indicator
+     Serial.print("-4 ");
+     Serial.println(roundNumber);
+     delay(1000);
+     
+     
+     
+     
+     
 
   /*stuckUser =0;
    do{
