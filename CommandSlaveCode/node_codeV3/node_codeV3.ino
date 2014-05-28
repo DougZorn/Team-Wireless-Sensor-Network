@@ -156,6 +156,7 @@ boolean horizonMode_Control;
 boolean baroMode_Control;
 boolean magMode_Control;
 
+
 byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to be in
   switch(modeID){
     case 1: 
@@ -537,6 +538,92 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
 }
 
 
+void flightFunction(){
+   /***************************** LEVEL Handling *******************************************/
+  if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
+    
+    
+    Serial.println("");
+    //Serial.print("I am in Flight Mode, OnOff = ");
+    //Serial.print(OnOff, DEC);
+    //Serial.println("");
+    
+    
+    //arm the motor once here
+    if(OnOff==0){
+      ArmMotors();
+      OnOff = 2;
+    }
+    
+    atLevel =false;
+    //Serial.println("in flight");
+    byte heightLevel = 0x0B;
+
+    int minHeight = 80; //in cm
+    int maxHeight = 90;     
+   
+    if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
+      
+      //heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
+      heightLevel = 0x0C;
+      
+      writeThrust(heightLevel);
+      Serial.print("Too low: ");
+      //Serial.print(heightLevel,DEC);
+    }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
+    
+    
+      //heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
+      
+      heightLevel = 0x0B;
+      
+      writeThrust(heightLevel);
+      Serial.print("Too High: ");
+      //Serial.print(heightLevel,DEC);
+    }else{
+      
+      Serial.print("Just Right: ");
+      //Serial.print(heightLevel,DEC);
+      
+      writeThrust(heightLevel);        //keep current level
+      atLevel =true;
+    }
+  }else if(Flight == 1){
+    if(myData.ultraSonic <= 21){    //if it is close to ground
+      if(myData.EstAlt <5){        //it is right at top of ground
+        writeThrust(0x07);          //turns to lowest settings
+         
+         
+         
+         
+    Serial.println("");
+    Serial.println("I am in Land Mode for once");
+        //disarm if shutdown
+        //don't if it is just land
+        //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
+        
+      if(OnOff==1){
+        
+        Serial.println("Disarmed");
+        disarmMotors();
+        OnOff = 2;
+      }
+        
+    Serial.println("");
+         
+        Flight = 2;                //set it so it will ignore flight and land
+      }else{                       //if close but not above ground
+        writeThrust(0x09);         //slowly go down because it is close to ground
+      }
+    }else{                         //if not even close to ground
+      writeThrust(0x08);           //descend morderately
+    }
+  }
+  //Serial.println("Flight = ");
+  //Serial.println(Flight, DEC);
+  
+  //Serial.println("OutLoop");
+}
 
 void setup(){
   
@@ -579,6 +666,8 @@ void loop(){
   //This block picks up a new message if the state machine requires one this
   //cycle.  It also accommodates packets not arriving yet, and checksum not
   //passing.  It also sets gotNewMsg, which controls data collection later
+  
+  //Serial.println("wantNewMsg");
   if(wantNewMsg){
     //Save old values
     for(int i = 0; i < PACKET_LENGTH; i++){
@@ -609,6 +698,9 @@ void loop(){
     }
   }
 
+
+  
+  //Serial.println("state machine");
   //State machine controlling what to do with packet
   switch(state){
 
@@ -753,6 +845,11 @@ void loop(){
   //Serial.println("++++++++++++++++++++++++++");
   //Every cycle there is a new packet in currMsg, do RSSI/LQI
   //averaging, choosing, and conversion
+  
+  
+  
+    //Serial.println("gotNewMsg");
+  
   if(gotNewMsg){
     //Filter RSSI based on +-10 around running average, if there is one
     //make sure pointer is in right spot, then put new data in that location
@@ -857,8 +954,13 @@ void loop(){
   prtSpot = 0;
   upDated = 0;  //flag for update
   
+  
+  
+  ///Serial.println("uartArray");
+  
+  
   while(mySerial.available()){ //maybe add || certain byte: hardcoded.
-    delayMicroseconds(5);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
+    //delayMicroseconds(5);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
     uartArray[curSpot++] = mySerial.read();
     upDated=1;
     if(curSpot>=64){
@@ -898,6 +1000,10 @@ void loop(){
   moveRequired = true;
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
+  
+  
+  //Serial.println("Movement ProtoCol");
+  
   
   if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
@@ -1047,91 +1153,10 @@ void loop(){
     }
   }
   
+  //Serial.println("flightFunction");
   
-  /***************************** LEVEL Handling *******************************************/
-  if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
-    
-    
-    Serial.println("");
-    //Serial.print("I am in Flight Mode, OnOff = ");
-    //Serial.print(OnOff, DEC);
-    //Serial.println("");
-    
-    
-    //arm the motor once here
-    if(OnOff==0){
-      ArmMotors();
-      OnOff = 2;
-    }
-    
-    atLevel =false;
-    //Serial.println("in flight");
-    byte heightLevel = 0x0B;
-
-    int minHeight = 80; //in cm
-    int maxHeight = 90;     
-   
-    if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
-      
-      //heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
-      heightLevel = 0x0C;
-      
-      writeThrust(heightLevel);
-      Serial.print("Too low: ");
-      //Serial.print(heightLevel,DEC);
-    }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
-    
-    
-      //heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
-      
-      heightLevel = 0x0B;
-      
-      writeThrust(heightLevel);
-      Serial.print("Too High: ");
-      //Serial.print(heightLevel,DEC);
-    }else{
-      
-      Serial.print("Just Right: ");
-      //Serial.print(heightLevel,DEC);
-      
-      writeThrust(heightLevel);        //keep current level
-      atLevel =true;
-    }
-  }else if(Flight == 1){
-    if(myData.ultraSonic <= 21){    //if it is close to ground
-      if(myData.EstAlt <5){        //it is right at top of ground
-        writeThrust(0x07);          //turns to lowest settings
-         
-         
-         
-         
-    Serial.println("");
-    Serial.println("I am in Land Mode for once");
-        //disarm if shutdown
-        //don't if it is just land
-        //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
-        
-      if(OnOff==1){
-        
-        Serial.println("Disarmed");
-        disarmMotors();
-        OnOff = 2;
-      }
-        
-    Serial.println("");
-         
-        Flight = 2;                //set it so it will ignore flight and land
-      }else{                       //if close but not above ground
-        writeThrust(0x09);         //slowly go down because it is close to ground
-      }
-    }else{                         //if not even close to ground
-      writeThrust(0x08);           //descend morderately
-    }
-  }
-  //Serial.println("Flight = ");
-  //Serial.println(Flight, DEC);
-  
-  //Serial.println("OutLoop");
+   flightFunction();
+ 
   
   /***************************** Mode Handling *******************************************/
 /*
