@@ -677,6 +677,7 @@ void loop(){
   mySerial.write(0x5A);
   writeData16((int16_t) myData.ultraSonic);
   
+  mySerial.write(((((myData.ultraSonic>>8)&0x00FF) + (myData.ultraSonic&0x00FF))%10));
   
   if(wantNewMsg){
     //Save old values

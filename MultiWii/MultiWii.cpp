@@ -844,8 +844,9 @@ void loop () {
       failsafeCnt++;
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
+	//ULTRASONIC DATA TO AUX CHANNEL FOR DEBUG
+	//rcData[4] = sensorDataU + 1500;	
 	
-	rcData[6] = sensorDataU + 1000;
 
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
@@ -993,13 +994,16 @@ void loop () {
     //maintainNode(); //maintain signal values for current flight mode status
     
     uint16_t auxState = 0;
-    /*
+    
+      //comment out for autonmous
+   /*   
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
-    */
-    for(i = 0; i<4;i++){
+   */
+    
+    for(i = 0; i<8;i++){
       rcData[i]-=34;
     }
     ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
@@ -1397,6 +1401,8 @@ void loop () {
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
+  
+
   
   if(( waitRound >= 20)||(ackFlag != 0x00)){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
