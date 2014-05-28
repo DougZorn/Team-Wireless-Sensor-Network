@@ -19,9 +19,9 @@ void initializePWMs()
   TCCR1A =  _BV(COM1A1) | _BV(COM1B1)| _BV(WGM10);//pins 9 and 10
   TCCR1B =  _BV(WGM12) | _BV(CS12) | _BV(CS10);	
  
-  OCR0A = 10;  //pitch pin 6
-  OCR0B = 10;  //rudder pin5
-  OCR1A = 10;  //roll pin 9
+  OCR0A = 11;  //pitch pin 6
+  OCR0B = 11;  //rudder pin5
+  OCR1A = 11;  //roll pin 9
   OCR1B = 10;  //thrust pin 10
 }
 
@@ -52,7 +52,7 @@ void ArmMotors(void)
   writeThrust(7);  
   writeRudder(14);
   delay(250);
-  writeRudder(10);    
+  writeRudder(11);    
   writeThrust(8);
 }
 
