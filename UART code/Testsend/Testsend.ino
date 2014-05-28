@@ -30,10 +30,10 @@ void loop(){
     mySerial.write(0x80);
   
     mySerial.write(1);
-    temp = 0xA4C9>>8;  
+    temp = 0xFFDB>>8;  
     //Serial.print(temp,HEX);
     mySerial.write(temp);
-    temp = 0xA4C9;
+    temp = 0xFFDB;
     //Serial.print(temp,HEX);
     //Serial.print(" ");
     mySerial.write(temp);

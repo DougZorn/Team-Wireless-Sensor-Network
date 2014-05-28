@@ -12,76 +12,65 @@
 #define CC2500_RXFIFO  0x3F
 #define CC2500_TXFIFO_BURST  0x7F
 #define CC2500_RXFIFO_BURST  0xFF
-#define TX_TIMEOUT 100 // in milliseconds
+#define TX_TIMEOUT 1 // in milliseconds
 #define PACKET_LENGTH 0X07
 #define SEND_FORLOOP 0x08
 #define ADDRESS 0xFF
 
 void WriteReg(char addr, char value) //see page 22 of cc2500 data sheet for timing
 {
-  digitalWrite(SS,LOW);
-  //delayMicroseconds(150);
+  digitalWrite(2,LOW); 
   while (digitalRead(MISO) == HIGH)
   {
   };    
   SPI.transfer(addr);
-  //delayMicroseconds(1);
-  SPI.transfer(value);
-  //delayMicroseconds(1);
-  digitalWrite(SS,HIGH);
+  delayMicroseconds(1);
+  SPI.transfer(value);  
+  digitalWrite(2,HIGH);
 }
 
 void WriteTX_burst(char addr, char value[], byte count)
 {  
   addr = addr + 0x40;
-  digitalWrite(SS,LOW);
-  //delayMicroseconds(150);  
+  digitalWrite(2,LOW);    
   while (digitalRead(MISO) == HIGH) {
   };
-  SPI.transfer(addr);
-  //delayMicroseconds(1);    
+  SPI.transfer(addr);  
   for(byte i = 0; i<count; i++)
   {
     SPI.transfer(value[i]);
-  }
-  //delayMicroseconds(1);
-  digitalWrite(SS,HIGH);  
+  }  
+  digitalWrite(2,HIGH);  
 }
 
 char ReadReg(char addr){
-  addr = addr + 0x80;
-  //delayMicroseconds(150);
-  digitalWrite(SS,LOW);
+  addr = addr + 0x80;  
+  digitalWrite(2,LOW);
   while (digitalRead(MISO) == HIGH) {
     };
-  char x = SPI.transfer(addr);
-  //delayMicroseconds(1); 
-  char y = SPI.transfer(0);
-  //delayMicroseconds(150);
-  digitalWrite(SS,HIGH);
+  char x = SPI.transfer(addr);   
+  char y = SPI.transfer(0);  
+  digitalWrite(2,HIGH);
   return y;  
 }
 
 char ReadOnly_Reg(char addr){
   addr = addr + 0xC0;
-  digitalWrite(SS,LOW);
+  digitalWrite(2,LOW);
   while (digitalRead(MISO) == HIGH) {
     };
-  char x = SPI.transfer(addr);
-  //delayMicroseconds(1);
+  char x = SPI.transfer(addr);  
   char y = SPI.transfer(0);
-  digitalWrite(SS,HIGH);
+  digitalWrite(2,HIGH);
   return y;  
 }
 
-void SendStrobe(char strobe){
-  //delayMicroseconds(150);
-  digitalWrite(SS,LOW);  
+void SendStrobe(char strobe){  
+  digitalWrite(2,LOW);  
   while (digitalRead(MISO) == HIGH) {
   };  
-  SPI.transfer(strobe);
-  //delayMicroseconds(1); 
-  digitalWrite(SS,HIGH);    
+  SPI.transfer(strobe);  
+  digitalWrite(2,HIGH);    
 }
 
 void sendPacket(byte name, byte target, byte distance, byte sensorData, byte hop, byte end_byte)
@@ -133,4 +122,3 @@ int listenForPacket(byte recvPacket[]) {
 }
 
 #endif
-
