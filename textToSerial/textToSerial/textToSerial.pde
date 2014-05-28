@@ -8,17 +8,18 @@ int rounds = -1;
 void setup() {
     println(Serial.list());
   // Open the port you are using at the rate you want:
-  myPort = new Serial(this, Serial.list()[2], 9600);                          //Pick Arduino serial port
+  myPort = new Serial(this, Serial.list()[1], 9600);                          //Pick Arduino serial port
   myPort.clear();
 }
 
 boolean flag = false;
 String[] pieces;
+char[] keyInput = {};
 
 void draw() {
 
   //Look for new round, or start on first round
-  while (!flag) {
+  //while (!flag) {
     reader = createReader("input.txt");
     line = getNextLine(reader);
 
@@ -41,9 +42,12 @@ void draw() {
       }
     }
     //If you aren't starting or you don't detect the next round, then wait a bit and check next time
-    delay(1000);
-  }
+    
+    delay(100);
+    //delay(1000);
+  //}
 
+  if(!flag){
   while (line!= null) {
     //first line, no splitting necessary
     if (flag) {
@@ -67,21 +71,21 @@ void draw() {
         print(" ");
         println(int(pieces[3]));
         
-        myport.write(int(pieces[0]));
-        myport.write(" ");
-        myport.write(int(pieces[1]));
-        myport.write(" ");
-        myport.write(int(pieces[2]));
-        myport.write(" ");
-        myport.write(int(pieces[3]));        
+        myPort.write(int(pieces[0]));
+        myPort.write(" ");
+        myPort.write(int(pieces[1]));
+        myPort.write(" ");
+        myPort.write(int(pieces[2]));
+        myPort.write(" ");
+        myPort.write(int(pieces[3]));        
       }else if(int(trim(pieces[0])) == -4){
         print(int(pieces[0]));
         print(" ");
         println(int(pieces[1]));
         
-        myport.write(int(pieces[0]));
-        myport.write(" ");
-        myport.write(int(pieces[1]));
+        myPort.write(int(pieces[0]));
+        myPort.write(" ");
+        myPort.write(int(pieces[1]));
       }else{
         print(int(pieces[0]));
         print(" ");
@@ -89,14 +93,16 @@ void draw() {
         print(" ");
         println(int(pieces[2]));
         
-        myport.write(int(pieces[0]));
-        myport.write(" ");
-        myport.write(int(pieces[1]));
-        myport.write(" ");
-        myport.write(int(pieces[2]));
+        myPort.write(int(pieces[0]));
+        myPort.write(" ");
+        myPort.write(int(pieces[1]));
+        myPort.write(" ");
+        myPort.write(int(pieces[2]));
       }
     }
   }
+  }
+  
 }
 
 void delay(int amount) {
@@ -117,5 +123,27 @@ String getNextLine(BufferedReader br) {
     line = null;
   }
   return line;
+}
+
+void keyPressed(){
+  
+ keyInput = append(keyInput, key); 
+  if(key == ENTER){
+    
+    String[] completeInput = {};
+    for(int i = 0; i < keyInput.length; i++){
+      completeInput = append(completeInput, str(keyInput[i]));
+    }
+    String completed = join(completeInput, "");
+    println(completed);
+    
+    
+    char[] newKeyInput = {};
+    keyInput = newKeyInput;
+    
+  }else{
+    println(keyInput);
+    println("");
+  }
 }
 

@@ -25,12 +25,51 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
 
 int waitRound = 0;
-byte temp;
+/*
+boolean sendStartEndByte(char *state){
+  switch(state){
+    case "start":
+      Serial.println("started"); 
+      //SerialWrite(1,0x80);
+      return 0;
+    case "end": 
+      Serial.println("end"); 
+      //SerialWrite(1,0xC0);
+      return 0;
+    default:
+      return 1;
+  }
+}
+*/
 
+void sendBit16(int ID, int16_t data16){
+  byte temp;
+  SerialWrite(1,ID);
+  temp = data16 >> 8;
+  SerialWrite(1,temp);
+  temp = data16;
+  SerialWrite(1,temp);
+}
+
+void sendBit32(int ID, int32_t data32){
+  byte temp;
+  SerialWrite(1,ID);
+  temp = data32 >> 24;
+  SerialWrite(1,temp);
+  temp = data32>>16;
+  SerialWrite(1,temp);
+  temp = data32>>8;
+  SerialWrite(1,temp);
+  temp = data32;
+  SerialWrite(1,temp);
+}
+byte ackFlag = 0;
+byte constFlag = 0;
 
 /*********** RC alias *****************/
 
@@ -948,13 +987,21 @@ void loop () {
         AccInflightCalibrationSavetoEEProm = 1;
       }
     #endif
-
+     
+    //maintainNode(); //maintain signal values for current flight mode status
+    
     uint16_t auxState = 0;
+    /*
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
-      rcOptions[i] = (auxState & conf.activate[i])>0;
-
+      rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
+    */
+    for(i = 0; i<8;i++){
+      rcData[i]-=34;
+    }
+    ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
+    
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
@@ -1347,46 +1394,28 @@ void loop () {
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
   
-  
-
-  if( waitRound >= 50){
+  if(( waitRound >= 20)||(ackFlag != 0x00)){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
       
-      SerialWrite(1,0x80);
+      SerialWrite(1,0x80);  //startByte
       
-      SerialWrite(1,1);
-      temp = imu.magADC[0] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[0];
-      SerialWrite(1,temp);
+      if(ackFlag != 0x00){
+        constFlag = ackFlag;
+      }
       
-      SerialWrite(1,2);
-      temp = imu.magADC[1] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[1];
-      SerialWrite(1,temp);
+
+      SerialWrite(1,64);
+      SerialWrite(1,constFlag);
       
-      SerialWrite(1,3);
-      temp = imu.magADC[2] >> 8;
-      SerialWrite(1,temp);
-      temp = imu.magADC[2];
-      SerialWrite(1,temp);
+      sendBit16(4, att.heading);  
       
-      
-      SerialWrite(1,32);
-      temp = alt.EstAlt >> 24;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt>>16;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt>>8;
-      SerialWrite(1,temp);
-      temp = alt.EstAlt;
-      SerialWrite(1,temp);
+      sendBit32(32,alt.EstAlt);
       
       SerialWrite(1,0xC0);
-      delay(100);
+      
       waitRound = 0;
     }
   }
   waitRound++;
+  
 }
