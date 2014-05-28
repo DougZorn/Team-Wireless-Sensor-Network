@@ -633,6 +633,8 @@ void setup(){
   mySerial.begin(9600);
   
   
+  
+  
   Serial.println("After UART");
   init_CC2500_V2();
   
@@ -668,6 +670,14 @@ void loop(){
   //passing.  It also sets gotNewMsg, which controls data collection later
   
   //Serial.println("wantNewMsg");
+  
+  myData.ultraSonic = analogRead(UltraSonicPin);
+  
+  
+  mySerial.write(0x5A);
+  writeData16((int16_t) myData.ultraSonic);
+  
+  
   if(wantNewMsg){
     //Save old values
     for(int i = 0; i < PACKET_LENGTH; i++){

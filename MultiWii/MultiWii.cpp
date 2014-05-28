@@ -844,6 +844,8 @@ void loop () {
       failsafeCnt++;
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
+	
+	rcData[6] = sensorDataU + 1000;
 
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
@@ -997,7 +999,7 @@ void loop () {
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
     */
-    for(i = 0; i<8;i++){
+    for(i = 0; i<4;i++){
       rcData[i]-=34;
     }
     ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
@@ -1035,7 +1037,8 @@ void loop () {
         if (rcOptions[BOXBARO]) {
           if (!f.BARO_MODE) {
             f.BARO_MODE = 1;
-            AltHold = alt.EstAlt;
+            //AltHold = alt.EstAlt;
+			AltHold = sensorDataU;
             #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
               initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
             #else
@@ -1226,7 +1229,8 @@ void loop () {
         }
         isAltHoldChanged = 1;
       } else if (isAltHoldChanged) {
-        AltHold = alt.EstAlt;
+        //AltHold = alt.EstAlt;
+		AltHold = sensorDataU;
         isAltHoldChanged = 0;
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
