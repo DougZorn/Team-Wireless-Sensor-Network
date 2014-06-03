@@ -41,40 +41,31 @@ void setup() {
   println(Serial.list());
   // Open the port you are using at the rate you want: 
   //put Serial.list()[here] to 1 when no node is plugged in, 2 when there is a node
-  myPort = new Serial(this, Serial.list()[1], 9600);                          //Pick Arduino serial port
+  myPort = new Serial(this, Serial.list()[2], 9600);                          //Pick Arduino serial port
   myPort.clear();
 }
 
 
 void draw() {
+  
+  delay(500);
   switch(state) {
   case INSPECTSERIAL:
-   // println("inspectSerial state");
+    println("inspectSerial state");
 
     if (myPort.available() > 0) {
       serialInput = myPort.readStringUntil('\n');
+      println("received: " + serialInput);
+      
       if (serialInput != null) {
         serialPieces = split(serialInput, ' ');
+        
         if (int(trim(serialPieces[0])) == -3) {
-          //if rounds haven't started yet, start them by saving current round number
-          if (rounds <= 0) {
-            state = READSERIAL;
-            //mess with File file and file.delete()?
-            rounds = int(serialPieces[0]);
-            println("Round Number from Serial: " + rounds);
-          }
-          //otherwise only valid when what you receive is 1 more than the previous round
-          else if (int(trim(serialPieces[1])) == rounds+1) {
+          
             state = READSERIAL;
             //mess with File file and file.delete()? stub
-            rounds = int(serialPieces[0]);
+            rounds = int(trim(serialPieces[1]));
             println("Round Number from Serial: " + rounds);
-          }
-          //otherwise something went wrong with the round numbers
-          else {
-            println("Error: Expected round + 1 from Serial, found " + int(pieces[1]));
-          }
-          //Starting or continuing, you always need to start a new file before printing to a text file
         }
       }
     }
@@ -82,35 +73,46 @@ void draw() {
 
 
   case READSERIAL:
-    //println("readSerial state");
+    println("readSerial state");
     writer = createWriter("Serialoutput.txt");
 
     print(int(serialPieces[0]));
     print(" ");
-    println(int(serialPieces[1]));
+    println(int(trim(serialPieces[1])));
 
     writer.print(int(serialPieces[0]));
     writer.print(" ");
-    writer.print(int(serialPieces[1]));
+    writer.println(int(trim(serialPieces[1])));
 
     while (myPort.available () > 0) {
       serialInput = myPort.readStringUntil('\n');
+      println("received: " + serialInput);
 
-      if (serialInput != null) break;
+      if (serialInput == null) {
+        print("break from serialInput null");
+        break;
+      }
+        
       serialPieces = split(serialInput, ' ');
-
+      println("pieces: " + serialPieces[0] + " " + serialPieces[1]);
+      
       printToText(serialPieces);
-
+      
+       //-4 check is necessary to ensure we don't pick up other junk in Serial. We only want what's from -3 to -4
       if (int(trim(serialPieces[0])) == -4) break;
     }
+    
+    println("writing to file");
 
     writer.flush();
     writer.close();
+    
+    state = INSPECTTEXT;
     break;
 
 
   case INSPECTTEXT:
-    //println("inspectText state");
+    println("inspectText state");
     //Look for new round in first line of text
     reader = createReader("Routput.txt");
     line = getNextLine(reader);
@@ -120,29 +122,22 @@ void draw() {
       pieces = split(line, ' ');
       if (int(trim(pieces[0])) == -3) {
         //if you haven't started checking rounds yet, grab current round number
-        if (rounds <= 0) {
-          state = READTEXT;
-          rounds = int(pieces[1]);
-          println("Round Number from text: " + rounds);
-        }
-        //else check for round being one more than the previous round
-        else if (int(trim(pieces[1])) == rounds+1) {
+        if (int(trim(pieces[1])) == rounds) {
           state = READTEXT;
           rounds = int(pieces[1]);
           println("Round Number from text: " + rounds);
         }
         //otherwise something went wrong with the Round numbers
         else {
-          println("Error: Expected round + 1 from Text, found " + int(pieces[1]));
+          println("Waiting for round " + rounds + ", text is on round " + int(pieces[1]));
         }
       }
     }
-    delay(100);
     break;
 
 
   case READTEXT:
-    //println("readText state");
+    println("readText state");
     //Already have the first line, print it
     print(int(pieces[0]));
     print(" ");
@@ -182,13 +177,15 @@ void draw() {
 
 void printToText(String[] in) {
   for (int i = 0; i < in.length; i++) {
-    writer.print(int(in[i]));
-    print(int(in[i]));
+    writer.print(trim(in[i]));
+    print("printing: ");
+    println(trim(in[i]));
     if (i  != in.length-1){
       writer.print(" ");
       print(" "); 
       }
   }
+  writer.println("");
   println("");
   //possibly flush here? stub
 }
