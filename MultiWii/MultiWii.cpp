@@ -949,6 +949,10 @@ void loop () {
       }
     #endif
 
+    for(i = 0; i < 4; i++){
+     rcData[i] = rcData[i] - 36;
+    }
+
     uint16_t auxState = 0;
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
@@ -1384,9 +1388,11 @@ void loop () {
       SerialWrite(1,temp);
       
       SerialWrite(1,0xC0);
-      delay(100);
+      //delay(100);
       waitRound = 0;
     }
   }
   waitRound++;
+  
+  
 }
