@@ -12,8 +12,8 @@
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
-//#include "read_write.h"
-#include "read_writeV2.h"
+#include "read_write.h"
+//#include "read_writeV2.h"
 #include "motorcontrol.h"
 
 //Declare Pins for UART
@@ -21,7 +21,9 @@ SoftwareSerial mySerial(8, 7);   // RX, TX
 
 
 //The LED PIN
-int ledPin = 4;
+
+int ledPin = 9;
+//int ledPin = 4; //V2
 
 //Timer info
 const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
@@ -36,9 +38,9 @@ const byte NUM_NODES = 4;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 1;
-const byte      PREV_NODE = 0;
-const byte PREV_PREV_NODE = 3;
+const byte        MY_NAME = 3;
+const byte      PREV_NODE = 2;
+const byte PREV_PREV_NODE = 1;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -543,7 +545,7 @@ void flightFunction(){
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
     
     
-    Serial.println("");
+    //Serial.println("");
     //Serial.print("I am in Flight Mode, OnOff = ");
     //Serial.print(OnOff, DEC);
     //Serial.println("");
@@ -568,7 +570,7 @@ void flightFunction(){
       heightLevel = 0x0C;
       
       writeThrust(heightLevel);
-      Serial.print("Too low: ");
+      //Serial.print("Too low: ");
       //Serial.print(heightLevel,DEC);
     }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
     
@@ -578,11 +580,11 @@ void flightFunction(){
       heightLevel = 0x0B;
       
       writeThrust(heightLevel);
-      Serial.print("Too High: ");
+      //Serial.print("Too High: ");
       //Serial.print(heightLevel,DEC);
     }else{
       
-      Serial.print("Just Right: ");
+      //Serial.print("Just Right: ");
       //Serial.print(heightLevel,DEC);
       
       writeThrust(heightLevel);        //keep current level
@@ -596,20 +598,20 @@ void flightFunction(){
          
          
          
-    Serial.println("");
-    Serial.println("I am in Land Mode for once");
+    //Serial.println("");
+    //Serial.println("I am in Land Mode for once");
         //disarm if shutdown
         //don't if it is just land
         //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
         
       if(OnOff==1){
         
-        Serial.println("Disarmed");
+        //Serial.println("Disarmed");
         disarmMotors();
         OnOff = 2;
       }
         
-    Serial.println("");
+    //Serial.println("");
          
         Flight = 2;                //set it so it will ignore flight and land
       }else{                       //if close but not above ground
@@ -816,7 +818,8 @@ void loop(){
       //..also send final packet with END set high
       sendPacket(MY_NAME, 255, 0, 0, 0, 1);//stub byte conversion with neg values
     }
-
+    
+    digitalWrite(ledPin, LOW);
     //Return to DECIDE and try to get new packet
     state = DECIDE;
     wantNewMsg = true;
@@ -1168,6 +1171,12 @@ void loop(){
    flightFunction();
  
   
+   Serial.print("currX = ");
+   Serial.println(currX);
+   
+   Serial.print("currY = ");
+   Serial.println(currY);
+   
   /***************************** Mode Handling *******************************************/
 /*
   Serial.println("");

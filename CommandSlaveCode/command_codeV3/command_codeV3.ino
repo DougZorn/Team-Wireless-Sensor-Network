@@ -205,7 +205,7 @@ void userCom(){
   int endSequenceNumber;
   int nodeNum;
 
-  digitalWrite(ledPin, LOW);
+  //digitalWrite(ledPin, LOW);
   if(Serial.available()){
     arg1 = NULL;
     arg2 = NULL;  //use for later improve arguments
@@ -416,8 +416,8 @@ void userCom(){
 
     Serial.print("out of while loop\n");
 
-
   }
+  
 }
 
 
@@ -561,7 +561,7 @@ void loop(){
         distances[h][i] = distances[i][h];
       }
     }
-    /*
+    
     //Transmit data through serial
      roundNumber = roundNumber + 1;
      //Hard-coded formatting that R knows to accept, starting with round number and number of nodes
@@ -606,12 +606,12 @@ void loop(){
      }
      //Send round number again, as "end of serial transmission" indicator
      Serial.print("-4 ");
-     Serial.println(roundNumber);*/
+     Serial.println(roundNumber);
 
     //Stub, read from Serial to detect results from R, then read in until
     //receive "-4 [roundNumber]" back (signifies end of transmission)
     //For now, just delay for a second
-    delay(1000);
+    delay(100);
     
     userCom();
 
@@ -646,6 +646,8 @@ void loop(){
     lastHeardFrom = MY_NAME;
 
     //Turn is over, begin receiving again
+    
+    digitalWrite(ledPin, LOW);
     wantNewMsg = true;
     state = RECEIVE;
     break;
@@ -687,7 +689,7 @@ void loop(){
   }
 
   //userCom();
-  
+  /*
   //Transmit data through serial
      roundNumber = roundNumber + 1;
      //Hard-coded formatting that R knows to accept, starting with round number and number of nodes
@@ -734,7 +736,7 @@ void loop(){
      Serial.print("-4 ");
      Serial.println(roundNumber);
      delay(1000);
-     
+     */
      
      
      

@@ -10,7 +10,7 @@ function(){
 		#Loop to look at input file, only processes input if
 		#round number changes in line 1
 		while(roundNumber != prevRound ){
-			line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+			line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 			
 			#Check for good file
 			if(!is.na(line[1])){
@@ -23,7 +23,7 @@ function(){
 					
 					#Input has changed, get number of nodes
 					index <- index + 1 
-					line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+					line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 					size <- line[3] 
 					
 					#Make empty matrix/names matrix of appropriate sizes
@@ -34,7 +34,7 @@ function(){
 					
 					#Everything is checked, so read entire file
 					repeat{
-						line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+						line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 						#if EOF, stop scanning
 						if(!length(line)) break 
 						
@@ -97,6 +97,12 @@ function(){
 		if(hasNA){
 			print("Has NA values still")
 			flush.console()
+			
+			cat("-3 ", file = "Routput.txt", append = FALSE)
+			cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
+			cat("-4 ", file = "Routput.txt", append = TRUE)
+			cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")			
+		
 		}else{
 			#Do MDS
 			fit <- cmdscale(data, eig=TRUE, k=2)
@@ -247,13 +253,15 @@ function(){
 				
 				
 				#Round calculations, print to file
-				cat(roundNumber, file = "output.txt", append = FALSE, sep = "\n")
+				cat("-3 ", file = "Routput.txt", append = FALSE)
+				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 				for(i in 1:size){
-					cat(round(x[i] + 126), file = "output.txt", append = TRUE)
-					cat(" ", file = "output.txt", append = TRUE)
-					cat(round(y[i] + 126), file = "output.txt", append = TRUE, sep = "\n")
+					cat(round(x[i] + 126), file = "Routput.txt", append = TRUE)
+					cat(" ", file = "Routput.txt", append = TRUE)
+					cat(round(y[i] + 126), file = "Routput.txt", append = TRUE, sep = "\n")
 				}
-				cat(roundNumber, file = "output.txt", append = TRUE, sep = "\n")
+				cat("-4 ", file = "Routput.txt", append = TRUE)
+				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 			
 			} #End of eig check case
 		} #End of NA check case

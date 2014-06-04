@@ -7,7 +7,7 @@ final int READTEXT = 4;
 
 //State Machine. 
 //->First by looking for change in serial
-int state = INSPECTTEXT;
+int state = INSPECTSERIAL;
 
 //Reading from Text variables
 BufferedReader reader;
@@ -43,8 +43,6 @@ void setup() {
   //put Serial.list()[here] to 1 when no node is plugged in, 2 when there is a node
   myPort = new Serial(this, Serial.list()[2], 9600);                          //Pick Arduino serial port
   myPort.clear();
-  
-  delay(4000);
 }
 
 
@@ -52,44 +50,22 @@ void draw() {
   switch(state) {
   case INSPECTSERIAL:
     println("inspectSerial state");
-    delay(1000);
-    
+
     if (myPort.available() > 0) {
       serialInput = myPort.readStringUntil('\n');
-      
-      println("serial input " + serialInput);
-      
+      println("received: " + serialInput);
       
       if (serialInput != null) {
         serialPieces = split(serialInput, ' ');
+        
         if (int(trim(serialPieces[0])) == -3) {
-          state = READSERIAL;
           
-          /*
-          //if rounds haven't started yet, start them by saving current round number
-          if (rounds <= 0) {
-            state = READSERIAL;
-            //mess with File file and file.delete()?
-            rounds = int(serialPieces[0]);
-            println("Round Number from Serial: " + rounds);
-          }
-          //otherwise only valid when what you receive is 1 more than the previous round
-          else if (int(trim(serialPieces[1])) == rounds+1) {
             state = READSERIAL;
             //mess with File file and file.delete()? stub
-            rounds = int(serialPieces[0]);
+            rounds = int(trim(serialPieces[1]));
             println("Round Number from Serial: " + rounds);
-          }
-          //otherwise something went wrong with the round numbers
-          else {
-            println("Error: Expected round + 1 from Serial, found " + int(pieces[1]));
-          }
-          
-          */
-          //Starting or continuing, you always need to start a new file before printing to a text file
         }
       }
-      
     }
     break;
 
@@ -100,27 +76,38 @@ void draw() {
 
     print(int(serialPieces[0]));
     print(" ");
-    println(int(serialPieces[1]));
+    println(int(trim(serialPieces[1])));
 
     writer.print(int(serialPieces[0]));
     writer.print(" ");
-    writer.print(int(serialPieces[1]));
+    writer.println(int(trim(serialPieces[1])));
 
-    //while (myPort.available () > 0) {
-    while(true){
+    while (myPort.available () > 0) {
+      delay(10);
       serialInput = myPort.readStringUntil('\n');
+      println("received: " + serialInput);
 
-      if (serialInput != null) break;
+      if (serialInput == null) {
+        print("break from serialInput null");
+        break;
+      }
+        
       serialPieces = split(serialInput, ' ');
-
+      println("pieces: " + serialPieces[0] + " " + serialPieces[1]);
+      
       printToText(serialPieces);
-
+      
+       //-4 check is necessary to ensure we don't pick up other junk in Serial. We only want what's from -3 to -4
       if (int(trim(serialPieces[0])) == -4) break;
     }
+    
+    println("writing to file");
 
     writer.flush();
     writer.close();
     
+    
+    //state = INSPECTSERIAL;
     state = INSPECTTEXT;
     break;
 
@@ -128,7 +115,7 @@ void draw() {
   case INSPECTTEXT:
     println("inspectText state");
     //Look for new round in first line of text
-    reader = createReader("output.txt");
+    reader = createReader("Routput.txt");
     line = getNextLine(reader);
 
     if (line != null) {
@@ -136,24 +123,17 @@ void draw() {
       pieces = split(line, ' ');
       if (int(trim(pieces[0])) == -3) {
         //if you haven't started checking rounds yet, grab current round number
-        if (rounds <= 0) {
-          state = READTEXT;
-          rounds = int(pieces[1]);
-          println("Round Number from text: " + rounds);
-        }
-        //else check for round being one more than the previous round
-        else if (int(trim(pieces[1])) == rounds+1) {
+        if (int(trim(pieces[1])) == rounds) {
           state = READTEXT;
           rounds = int(pieces[1]);
           println("Round Number from text: " + rounds);
         }
         //otherwise something went wrong with the Round numbers
         else {
-          println("Error: Expected round + 1 from Text, found " + int(pieces[1]));
+          println("Waiting for round " + rounds + ", text is on round " + int(pieces[1]));
         }
       }
     }
-    delay(100);
     break;
 
 
@@ -164,10 +144,9 @@ void draw() {
     print(" ");
     println(int(pieces[1]));
 
-    myPort.write(pieces[0]);
+    myPort.write(int(pieces[0]));
     myPort.write(" ");
-    myPort.write(pieces[1]);
-    myPort.write("\n");
+    myPort.write(int(pieces[1]));
 
     //Loop through the rest of text, print and print to serial
     while (line!= null) {
@@ -182,13 +161,12 @@ void draw() {
         
         printToSerial(pieces);
         ordersArray = emptyStringArray;
-        break;
       }else{
         printToSerial(pieces);
       }
     }
 
-    
+
     state = INSPECTSERIAL;
     break;
 
@@ -200,30 +178,29 @@ void draw() {
 
 void printToText(String[] in) {
   for (int i = 0; i < in.length; i++) {
-    writer.print(int(in[i]));
-    print(int(in[i]));
+    writer.print(trim(in[i]));
+    print("printing: ");
+    println(trim(in[i]));
     if (i  != in.length-1){
       writer.print(" ");
       print(" "); 
       }
   }
+  writer.println("");
   println("");
   //possibly flush here? stub
 }
 
 void printToSerial(String[] in) {
-  
   for (int i = 0; i < in.length; i++) {
-    myPort.write(in[i]);
-    print((in[i]));
-    
+    myPort.write(int(in[i]));
+    print(int(in[i]));
     if (i  != in.length-1){
       myPort.write(" ");
       print(" ");
     }
   }
-  myPort.write("\n");
-  println("");  
+  println("");
 }
 
 
@@ -251,19 +228,13 @@ String getNextLine(BufferedReader br) {
 
 void keyPressed() { 
   if (key == ENTER) {
-    
-    
-    
     haveNewOrders = true;
-    
+
     //compile entered keys into a string called "completeCommand"
     completeInput = emptyStringArray;
     for (int i = 0; i < keyInput.length; i++) {
       completeInput = append(completeInput, str(keyInput[i]));
     }
-
-    //myPort.write(join(completeInput,""));
-    
 
     //test for valid command
     String[] test = split(join(completeInput,""), ' ');
@@ -283,7 +254,6 @@ void keyPressed() {
       print(trim(ordersArray[i]));
       println("}");
     }
-    
 
     //..and empty array of entered input
     keyInput = emptyCharArray;
