@@ -38,9 +38,9 @@ const byte NUM_NODES = 4;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 3;
-const byte      PREV_NODE = 2;
-const byte PREV_PREV_NODE = 1;
+const byte        MY_NAME = 2;
+const byte      PREV_NODE = 1;
+const byte PREV_PREV_NODE = 0;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -737,6 +737,16 @@ void loop(){
     digitalWrite(ledPin, LOW);
     //Serial.println("Decide State");
 
+    
+    Serial.print("currMsg = ");
+    Serial.println(currMsg[SENDER], DEC);
+    
+    Serial.print("lastHeardFrom = ");
+    Serial.println(lastHeardFrom, DEC);
+    
+    
+    
+
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
     if((currMsg[SENDER] == PREV_PREV_NODE || currMsg[SENDER] == PREV_NODE) && gotNewMsg){
       lastTime = millis();
@@ -1171,11 +1181,11 @@ void loop(){
    flightFunction();
  
   
-   Serial.print("currX = ");
-   Serial.println(currX);
+   //Serial.print("currX = ");
+   //Serial.println(currX);
    
-   Serial.print("currY = ");
-   Serial.println(currY);
+   //Serial.print("currY = ");
+   //Serial.println(currY);
    
   /***************************** Mode Handling *******************************************/
 /*
