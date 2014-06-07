@@ -620,9 +620,9 @@
   /***********************                  TX-related         **************************/
   /**************************************************************************************/
 
-    /* introduce a deadband around the stick center
+    /* introduce a around the stick center
        Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
-    //#define DEADBAND 6
+    #define DEADBAND 34
 
   /**************************************************************************************/
   /***********************                  GPS                **************************/
@@ -1009,7 +1009,11 @@
     /* to add debugging code
        not needed and not recommended for normal operation
        will add extra code that may slow down the main loop or make copter non-flyable */
-    //#define DEBUG
+    #define DEBUG
+    //debug[0]=rcCommand[THROTTLE];
+    //debug[1]=axisPID[ROLL];
+    //debug[2]=axisPID[PITCH];
+    //debug[3]=axisPID[YAW];
     //#define DEBUG_FREE // will add 'F' command to show free memory
 
     /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
