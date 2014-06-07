@@ -14,39 +14,11 @@
 #include "read_write.h"
 
 //Number of nodes, including Command Node
-const byte NUM_NODES = 4;
+const byte NUM_NODES = 5;
 byte RST[PACKET_LENGTH];
 
 //The LED PIN
 int ledPin = 9;
-
-void setup(){
-  Serial.begin(9600);
-  init_CC2500_V2();
-  pinMode(ledPin,OUTPUT);
-  while(listenForPacket(RST)){
-  }
-
-  digitalWrite(ledPin, HIGH);
-  for(int i = 0; i < 5; i++){
-    sendPacket(0, 255, 0, 0, 200, 0);
-  }
-  delay(500);
-  digitalWrite(ledPin, LOW);
-  delay(500);
-
-  //This just hardcodes some values into the Desired table, as bytes
-  randomSeed(analogRead(3));
-  int desired[NUM_NODES][2];
-  for(int i = 0; i < NUM_NODES; i++){
-    desired[i][0] = roundUp(random(30,230));  //roundUp((rand() % 200) + 30);  //gets a range of randoms from -100ish to 100ish
-    desired[i][1] = roundUp(random(30,230)); //roundUp((rand() % 200) + 30);
-  }
-  desired[0][0] = byte(128);
-  desired[0][0] = byte(128);
-
-}
-
 
 //State names
 const int INIT = 0;
@@ -452,6 +424,33 @@ void userCom(){
  return want;
  }
  */
+ 
+ void setup(){
+  Serial.begin(9600);
+  init_CC2500_V2();
+  pinMode(ledPin,OUTPUT);
+  while(listenForPacket(RST)){
+  }
+
+  digitalWrite(ledPin, HIGH);
+  for(int i = 0; i < 5; i++){
+    sendPacket(0, 255, 0, 0, 200, 0);
+  }
+  delay(500);
+  digitalWrite(ledPin, LOW);
+  delay(500);
+
+  //This just hardcodes some values into the Desired table, as bytes
+  randomSeed(analogRead(3));
+  int desired[NUM_NODES][2];
+  for(int i = 0; i < NUM_NODES; i++){
+    desired[i][0] = roundUp(random(30,230));  //roundUp((rand() % 200) + 30);  //gets a range of randoms from -100ish to 100ish
+    desired[i][1] = roundUp(random(30,230)); //roundUp((rand() % 200) + 30);
+  }
+  desired[0][0] = byte(128);
+  desired[0][0] = byte(128);
+
+}
 
 void loop(){
   //This block picks up a new message if the state machine requires one this
@@ -491,6 +490,8 @@ void loop(){
       sendPacket(0, 0, 0, 0, 0, 0);
     }
     sendPacket(0, 0, 0, 0, 0, 1);
+    sendPacket(0, 0, 0, 0, 0, 1);
+    sendPacket(0, 0, 0, 0, 0, 1);
 
     state = RECEIVE;
     wantNewMsg = true;
@@ -527,6 +528,12 @@ void loop(){
     //Serial.println(currMsg[RSSI_INDEX]);
 
     //Serial.println(lastHeardFrom);
+    
+    Serial.print("currMsg = ");
+    Serial.println(currMsg[SENDER], DEC);
+    
+    Serial.print("lastHeardFrom = ");
+    Serial.println(lastHeardFrom, DEC);
 
     //Prev node has finish sending
     if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){

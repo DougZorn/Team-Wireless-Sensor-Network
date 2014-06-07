@@ -34,13 +34,13 @@ const unsigned long TIMEOUT_P = 10;
 boolean atLevel;
 
 //Number of nodes, including Command Node
-const byte NUM_NODES = 4;
+const byte NUM_NODES = 5;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 2;
-const byte      PREV_NODE = 1;
-const byte PREV_PREV_NODE = 0;
+const byte        MY_NAME = 4;
+const byte      PREV_NODE = 3;
+const byte PREV_PREV_NODE = 1;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -700,6 +700,7 @@ void loop(){
     else{
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
+      
       lastHeardFrom = currMsg[SENDER];
       Serial.print("Msg from ");
       Serial.print(currMsg[SENDER]);
@@ -738,11 +739,11 @@ void loop(){
     //Serial.println("Decide State");
 
     
-    Serial.print("currMsg = ");
-    Serial.println(currMsg[SENDER], DEC);
+    //Serial.print("currMsg = ");
+    //Serial.println(currMsg[SENDER], DEC);
     
-    Serial.print("lastHeardFrom = ");
-    Serial.println(lastHeardFrom, DEC);
+    //Serial.print("lastHeardFrom = ");
+    //Serial.println(lastHeardFrom, DEC);
     
     
     
@@ -750,6 +751,8 @@ void loop(){
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
     if((currMsg[SENDER] == PREV_PREV_NODE || currMsg[SENDER] == PREV_NODE) && gotNewMsg){
       lastTime = millis();
+      
+      //Serial.println("im in last time");
     }
 
     //stub, this allows the case where prev_prev fails, and the node hasn't heard from prev_prev
@@ -758,7 +761,14 @@ void loop(){
     //for whether you've last heard anything from prev
     if(lastHeardFrom == PREV_NODE || lastHeardFrom == PREV_PREV_NODE){
       currTime = millis() - lastTime;
+      //Serial.println("im in currTime");
     }
+    
+    //Serial.print("lastTime = ");
+    //Serial.println(lastTime, DEC);
+    
+    //Serial.print("currTime = ");
+    //Serial.println(currTime, DEC);
 
     //This node's turn occurs if either the previous node has sent its final message
     //or if the timeout has occurred since the previous previous node has sent its final message
@@ -771,18 +781,18 @@ void loop(){
       wantNewMsg = false;
       lastTime = millis();
       currTime = 0;
-     // Serial.println("a");
-    }else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){
+      Serial.println("a");
+    }else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){ //
       state = SEND;
       lastTime = millis();
       currTime = 0;
       wantNewMsg = false;
-     // Serial.println("b");
+      Serial.println("b");
     }
     else if(gotNewMsg == false){ //If you didn't successfully get a packet this iteration, just stay in DECIDE and try again
       state = DECIDE;
       wantNewMsg = true;
-     // Serial.println("c");
+      Serial.println("c");
     }
     else if(currMsg[TARGET]==MY_NAME){ //..otherwise just go to RECEIVE to handle cases next time, and don't pick up a new packet
       state = RECEIVE;
@@ -817,6 +827,8 @@ void loop(){
       //}
 
       //..then send final packet with END set high
+      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
+      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
       sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
 
     }
