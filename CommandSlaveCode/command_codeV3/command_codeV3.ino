@@ -193,11 +193,11 @@ void userCom(){
     while(Serial.available());
 
     // delay(200);
-     Serial.print("I got ");
-     Serial.print(userCommand);
-     Serial.print("\n");
+     //Serial.print("I got ");
+     //Serial.print(userCommand);
+     //Serial.print("\n");
 
-    Serial.print("State 1\n");
+    //Serial.print("State 1\n");
 
     
      int mostRecent3 = 0;
@@ -215,14 +215,14 @@ void userCom(){
      //you have a partial message, so you need the previous full message
      if(mostRecent3 > mostRecent4) {
      mostRecent3 = secondMostRecent3;
-     Serial.print("Partial message error");
+     //Serial.print("Partial message error");
      }
      
      int countX = 0;
      for(int i = mostRecent3; i < mostRecent4; i++){
      snippedCommand[countX++] = userCommand[i];
      }
-     
+     /*
     Serial.print("snippedCommand = ");
     Serial.print(snippedCommand);
     Serial.print("\n");
@@ -252,7 +252,7 @@ void userCom(){
 
     Serial.print("userCommand = ");
     Serial.print(userCommand);
-    Serial.print("\n");
+    Serial.print("\n");*/
 
 
     arg1 = strtok_r(snippedCommand, "\n", &tempCommand1);
@@ -260,13 +260,13 @@ void userCom(){
     int lineCounter = 0;
     while(arg1 != NULL){
       
-      Serial.print("in while loop #");
-      Serial.print(lineCounter);
-      Serial.print("\n");
+      //Serial.print("in while loop #");
+      //Serial.print(lineCounter);
+      //Serial.print("\n");
       
-      Serial.print("I got arg1 = ");
-      Serial.print(arg1);
-      Serial.print("\n");
+      //Serial.print("I got arg1 = ");
+      //Serial.print(arg1);
+      //Serial.print("\n");
 
       
       
@@ -274,9 +274,9 @@ void userCom(){
       // strtok again is the problem of this
       arg2 = strtok_r(arg1, " ", &tempCommand2);
 
-      Serial.print("I got arg2 = ");
-      Serial.print(arg2);
-      Serial.print("\n");
+      //Serial.print("I got arg2 = ");
+      //Serial.print(arg2);
+      //Serial.print("\n");
 
       if(!strcmp(arg2, "-1")){
         //handle next/all
@@ -292,19 +292,19 @@ void userCom(){
         //handle next/all
         sequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
         
-        Serial.print("sequenceNumber = ");
-        Serial.print(sequenceNumber);
-        Serial.print("\n");
+        //Serial.print("sequenceNumber = ");
+        //Serial.print(sequenceNumber);
+        //Serial.print("\n");
       }
       else if(!strcmp(arg2, "-4")){
         //handle next/all
         endSequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
         
-        Serial.print("State Got -4\n");
+        //Serial.print("State Got -4\n");
         
-        Serial.print("endSequenceNumber = ");
-        Serial.print(endSequenceNumber);
-        Serial.print("\n");
+        //Serial.print("endSequenceNumber = ");
+        //Serial.print(endSequenceNumber);
+        //Serial.print("\n");
 
       }
       else if((nodeNum = atoi(arg2)) >= 0){
@@ -317,18 +317,18 @@ void userCom(){
         currLoc[nodeNum][0] = atoi(arg3);
         currLoc[nodeNum][1] = atoi(arg4);
         
-        Serial.print("currLoc[nodeNum][0] = ");
-        Serial.print( currLoc[nodeNum][0]);
-        Serial.print("\n");
-        Serial.print("currLoc[nodeNum][1] = ");
-        Serial.print(currLoc[nodeNum][1]);
-        Serial.print("\n");
+        //Serial.print("currLoc[nodeNum][0] = ");
+        //Serial.print( currLoc[nodeNum][0]);
+        //Serial.print("\n");
+        //Serial.print("currLoc[nodeNum][1] = ");
+        //Serial.print(currLoc[nodeNum][1]);
+        //Serial.print("\n");
         
       }
       else if(!strcmp(arg2, "-5")){
         //handle next/all
 
-        Serial.print("State Got -5\n");
+        //Serial.print("State Got -5\n");
 
         arg3 = strtok_r(NULL, " ", &tempCommand2);
         arg4 = strtok_r(NULL, " ", &tempCommand2);
@@ -343,7 +343,7 @@ void userCom(){
             sendPacket(0,argName,0,0,203,0);    //255 is for broadcast2 and 203 is for shudown
           }  
           sendPacket(0,argName,0,0,203,1); 
-          Serial.println("You typed shutdown");
+          //Serial.println("You typed shutdown");
           digitalWrite(ledPin, LOW);
         }
         else if(!strcmp(arg3, "land") && ((argName<NUM_NODES)||(argName==255))){
@@ -353,7 +353,7 @@ void userCom(){
             sendPacket(0,argName,0,0,204,0);    //255 is for broadcast2 and 204 is for land 
           }
           sendPacket(0,argName,0,0,204,1); 
-          Serial.println("You typed land");
+          //Serial.println("You typed land");
           digitalWrite(ledPin, LOW);
         }
         else if(!strcmp(arg3, "flight") && ((argName<NUM_NODES)||(argName==255))){
@@ -363,12 +363,12 @@ void userCom(){
             sendPacket(0,argName,0,0,205,0);    //255 is for broadcast2 and 205 is for flight                        
           } 
           sendPacket(0,argName,0,0,205,1);
-          Serial.println("You typed flight");
+          //Serial.println("You typed flight");
           digitalWrite(ledPin, LOW);
         }         
       }
       else{
-        Serial.print("read in error");
+        //Serial.print("read in error");
       }
 
 
@@ -386,7 +386,7 @@ void userCom(){
       //if(arg1 == NULL) break;
     }
 
-    Serial.print("out of while loop\n");
+    //Serial.print("out of while loop\n");
 
   }
   
@@ -529,11 +529,11 @@ void loop(){
 
     //Serial.println(lastHeardFrom);
     
-    Serial.print("currMsg = ");
-    Serial.println(currMsg[SENDER], DEC);
+    //Serial.print("currMsg = ");
+    //Serial.println(currMsg[SENDER], DEC);
     
-    Serial.print("lastHeardFrom = ");
-    Serial.println(lastHeardFrom, DEC);
+    //Serial.print("lastHeardFrom = ");
+    //Serial.println(lastHeardFrom, DEC);
 
     //Prev node has finish sending
     if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){

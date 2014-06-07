@@ -781,18 +781,18 @@ void loop(){
       wantNewMsg = false;
       lastTime = millis();
       currTime = 0;
-      Serial.println("a");
+      //Serial.println("a");
     }else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){ //
       state = SEND;
       lastTime = millis();
       currTime = 0;
       wantNewMsg = false;
-      Serial.println("b");
+      //Serial.println("b");
     }
     else if(gotNewMsg == false){ //If you didn't successfully get a packet this iteration, just stay in DECIDE and try again
       state = DECIDE;
       wantNewMsg = true;
-      Serial.println("c");
+      //Serial.println("c");
     }
     else if(currMsg[TARGET]==MY_NAME){ //..otherwise just go to RECEIVE to handle cases next time, and don't pick up a new packet
       state = RECEIVE;
@@ -864,6 +864,14 @@ void loop(){
       //stub, this is where movement variables are checked and changed (actual movement to be handled below)
     }
     
+    
+  
+   Serial.print("currX = ");
+   Serial.println(currX);
+   
+   Serial.print("currY = ");
+   Serial.println(currY);
+   
     //Best place for calculating if movement needed
     
     //if in x or y direct, it is off by 3 inches on any side, move to desired location
@@ -1192,12 +1200,6 @@ void loop(){
   
    flightFunction();
  
-  
-   //Serial.print("currX = ");
-   //Serial.println(currX);
-   
-   //Serial.print("currY = ");
-   //Serial.println(currY);
    
   /***************************** Mode Handling *******************************************/
 /*
