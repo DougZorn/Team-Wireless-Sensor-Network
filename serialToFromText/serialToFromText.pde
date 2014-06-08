@@ -49,7 +49,7 @@ void setup() {
 void draw() {
   switch(state) {
   case INSPECTSERIAL:
-    println("inspectSerial state");
+    //println("inspectSerial state");
 
     if (myPort.available() > 0) {
       serialInput = myPort.readStringUntil('\n');
@@ -113,7 +113,7 @@ void draw() {
 
 
   case INSPECTTEXT:
-    println("inspectText state");
+    //println("inspectText state");
     //Look for new round in first line of text
     reader = createReader("Routput.txt");
     line = getNextLine(reader);
@@ -138,15 +138,16 @@ void draw() {
 
 
   case READTEXT:
-    println("readText state");
+    //println("readText state");
     //Already have the first line, print it
     print(int(pieces[0]));
     print(" ");
     println(int(pieces[1]));
 
-    myPort.write(int(pieces[0]));
+    myPort.write(trim(pieces[0]));
     myPort.write(" ");
-    myPort.write(int(pieces[1]));
+    myPort.write(trim(pieces[1]));
+    myPort.write("\n");
 
     //Loop through the rest of text, print and print to serial
     while (line!= null) {
@@ -177,10 +178,10 @@ void draw() {
 }
 
 void printToText(String[] in) {
+  println("Printing line to text: ");
   for (int i = 0; i < in.length; i++) {
     writer.print(trim(in[i]));
-    print("printing: ");
-    println(trim(in[i]));
+    print(trim(in[i]));
     if (i  != in.length-1){
       writer.print(" ");
       print(" "); 
@@ -188,18 +189,19 @@ void printToText(String[] in) {
   }
   writer.println("");
   println("");
-  //possibly flush here? stub
 }
 
 void printToSerial(String[] in) {
+  println("printing line to Serial: ");
   for (int i = 0; i < in.length; i++) {
-    myPort.write(int(in[i]));
-    print(int(in[i]));
+    myPort.write(trim(in[i]));
+    print(trim(in[i]));
     if (i  != in.length-1){
       myPort.write(" ");
       print(" ");
     }
   }
+  myPort.write("\n");
   println("");
 }
 

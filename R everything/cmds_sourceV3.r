@@ -256,9 +256,11 @@ function(){
 				cat("-3 ", file = "Routput.txt", append = FALSE)
 				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 				for(i in 1:size){
-					cat(round(x[i] + 126), file = "Routput.txt", append = TRUE)
+					cat(i-1, file = "Routput.txt", append = TRUE)
+					cat(" ", file = "Routput.txt", append = TRUE)	
+					cat(round(x[i] + 127), file = "Routput.txt", append = TRUE)
 					cat(" ", file = "Routput.txt", append = TRUE)
-					cat(round(y[i] + 126), file = "Routput.txt", append = TRUE, sep = "\n")
+					cat(round(y[i] + 127), file = "Routput.txt", append = TRUE, sep = "\n")
 				}
 				cat("-4 ", file = "Routput.txt", append = TRUE)
 				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
