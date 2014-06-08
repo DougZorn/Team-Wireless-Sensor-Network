@@ -580,11 +580,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 #endif
 #endif
   }
-
-  
-  debug[1]=axisPID[ROLL];
-  debug[2]=axisPID[PITCH];
-  debug[3]=axisPID[YAW];
 }
 
 void setup() {
@@ -843,6 +838,29 @@ void loop () {
     failsafeCnt++;
 #endif
     // end of failsafe routine - next change is made with RcOptions setting
+///////////////////////////////////////////////////////////////Algae Bloom Deadband and account for PWM//////////////////////////////////////////////////////////////////
+//Account for PWM discrete values
+    for(i = 0; i<4; i++){
+      rcData[i]-= 34;
+    }
+    //Check if value is fluctuating in small interval
+    for(i = 0; i<4; i++){
+      if((rcData[i] < lastValue[i]+3) && (rcData[i] > lastValue[i]-3)){ //If it is, set it to the last assigned value
+        rcData[i] = setValue[i];
+        //rcCommand[i] = setValue[i];
+        lastValue[i] = rcData[i]; //Save current value to compare for next time
+      }
+      else{                        //If not, set a new assigned value
+        setValue[i] = rcData[i];
+        lastValue[i] = rcData[i];
+      }
+    }
+    for(i = 0; i<4; i++){
+      if((rcData[i] < 1506) && (rcData[i] > 1494)){ //If it is, set it to the last assigned value
+        //rcCommand[i] = 1500;
+        rcData[i] = 1500;
+      }
+    }
 
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
@@ -1013,7 +1031,7 @@ void loop () {
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0;
-
+/*
     //Account for PWM discrete values
     for(i = 0; i<4; i++){
       rcData[i]-= 34;
@@ -1036,7 +1054,7 @@ void loop () {
         rcData[i] = 1500;
       }
     }
-    
+    */
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
 #if ACC
     if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) {
@@ -1325,7 +1343,9 @@ void loop () {
   //**** PITCH & ROLL & YAW PID ****
 #if PID_CONTROLLER == 1 // evolved oldschool
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
-
+  debug[0]=rcCommand[THROTTLE];
+ 
+  
   // PITCH & ROLL
   for(axis=0;axis<2;axis++) {
     rc = rcCommand[axis]<<1;
@@ -1365,6 +1385,9 @@ void loop () {
 
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
+  //debug[1]=axisPID[ROLL];
+  //debug[2]=axisPID[PITCH];
+  //debug[3]=axisPID[YAW];
 
   //YAW
 #define GYRO_P_MAX 300
@@ -1386,7 +1409,12 @@ void loop () {
   ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
 
   axisPID[YAW] =  PTerm + ITerm;
-
+  
+  debug[1]=axisPID[ROLL];
+  debug[2]=axisPID[PITCH];
+  debug[3]=axisPID[YAW];
+  
+  
 #elif PID_CONTROLLER == 2 // alexK
 #define GYRO_I_MAX 256
 #define ACC_I_MAX 256

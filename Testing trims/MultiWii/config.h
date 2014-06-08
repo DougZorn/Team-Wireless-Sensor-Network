@@ -622,7 +622,7 @@
 
     /* introduce a around the stick center
        Must be greater than zero, comment if you dont want a deadband on roll, pitch and yaw */
-    #define DEADBAND 34
+    //#define DEADBAND 34
 
   /**************************************************************************************/
   /***********************                  GPS                **************************/
