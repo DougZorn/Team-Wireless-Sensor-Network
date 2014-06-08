@@ -34,13 +34,13 @@ const unsigned long TIMEOUT_P = 10;
 boolean atLevel;
 
 //Number of nodes, including Command Node
-const byte NUM_NODES = 5;
+const byte NUM_NODES = 4;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 1;
-const byte      PREV_NODE = 0;
-const byte PREV_PREV_NODE = 3;
+const byte        MY_NAME = 3;
+const byte      PREV_NODE = 2;
+const byte PREV_PREV_NODE = 1;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -778,13 +778,13 @@ void loop(){
       //state = IDLE_S;
       //wantNewMsg = false;
     //}else 
-    if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){
+    if((currMsg[SENDER] == PREV_NODE) && (currMsg[END_BYTE] == byte(1)) && (lastHeardFrom == PREV_NODE)){
       state = SEND;
       wantNewMsg = false;
       lastTime = millis();
       currTime = 0;
       //Serial.println("a");
-    }else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){ //
+    }else if(((lastHeardFrom == PREV_PREV_NODE) && (currTime > TIMEOUT_PP))||((lastHeardFrom == PREV_NODE) && (currTime > TIMEOUT_P))){ //
       state = SEND;
       lastTime = millis();
       currTime = 0;
