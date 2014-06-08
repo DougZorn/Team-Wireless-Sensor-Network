@@ -1,22 +1,13 @@
 #include <SPI.h>
-#include "read_writeV2.h"
-//#include "read_write.h"
+#include "read_write.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500_REG_V2.h"
 
 #ifndef INIT_CC2500_V2_H
 #define INIT_CC2500_V2_H
 
-#define CC2500_SRES    0x30  
-
 char PATABLE[] = {0xff,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-void init_CC2500_V2(){        
-        SPI.setClockDivider(SPI_CLOCK_DIV2);
-        SPI.setDataMode(SPI_MODE0);
-        pinMode(2,OUTPUT);
-        SPI.begin();
-        digitalWrite(2,HIGH);  
-        SendStrobe(CC2500_SRES);
+void init_CC2500_V2(){
 	WriteReg(REG_IOCFG2,VAL_IOCFG2);                //gdo2output pin configuration 
 	WriteReg(REG_IOCFG1,VAL_IOCFG1);                //gdo1output pin configuration 
 	WriteReg(REG_IOCFG0,VAL_IOCFG0);                //gdo0output pin configuration 
@@ -65,21 +56,6 @@ void init_CC2500_V2(){
 	WriteReg(REG_TEST1,VAL_TEST1);                  //various test settings 
 	WriteReg(REG_TEST0,VAL_TEST0);                  //various test settings 
         WriteReg(0x3E,0xFF);
-	//WriteReg(REG_PARTNUM,VAL_PARTNUM);              //chip id 
-	//WriteReg(REG_VERSION,VAL_VERSION);              //chip id 
-	//WriteReg(REG_FREQEST,VAL_FREQEST);              //frequency offset estimate from demodulator 
-	//WriteReg(REG_LQI,VAL_LQI);                      //demodulator estimate for link quality 
-	//WriteReg(REG_RSSI,VAL_RSSI);                    //received signal strength indication 
-	//WriteReg(REG_MARCSTATE,VAL_MARCSTATE);          //main radio control state machine state 
-	//WriteReg(REG_WORTIME1,VAL_WORTIME1);            //high byte of wor time 
-	//WriteReg(REG_WORTIME0,VAL_WORTIME0);            //low byte of wor time 
-	//WriteReg(REG_PKTSTATUS,VAL_PKTSTATUS);          //current gdoxstatus and packet status 
-	//WriteReg(REG_VCO_VC_DAC,VAL_VCO_VC_DAC);        //current setting from pll calibration module 
-	//WriteReg(REG_TXBYTES,VAL_TXBYTES);              //underflow and number of bytes 
-	//WriteReg(REG_RXBYTES,VAL_RXBYTES);              //underflow and number of bytes 
-	//WriteReg(REG_RCCTRL1_STATUS,VAL_RCCTRL1_STATUS);//last rc oscillator calibration result 
-	//WriteReg(REG_RCCTRL0_STATUS,VAL_RCCTRL0_STATUS);//last rc oscillator calibration result 
-
 }
 
 

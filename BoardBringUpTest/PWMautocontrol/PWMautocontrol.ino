@@ -16,14 +16,27 @@ void setup()
   delay(200);  
   writeThrust(11);
   delay(200);  
-  //writeThrust(12);
-  //delay(200);  
+  writeThrust(12);
+  delay(200);  
+  
   //writeThrust(13); 
   //delay(200);  
-  //writeThrust(12);   
-  //delay(200);  
-  //writeThrust(11);
-  //delay(200);  
+  
+  writeThrust(12);   
+  delay(200);
+  writeThrust(13);   
+  delay(200);
+  writeThrust(14);   
+  delay(200);
+  writeThrust(15);   
+  delay(200);
+  writeThrust(16);   
+  delay(200);
+  writeThrust(17);   
+  delay(200);
+  
+  writeThrust(11);
+  delay(200);  
   writeThrust(10);   
   delay(200);  
   writeThrust(9);

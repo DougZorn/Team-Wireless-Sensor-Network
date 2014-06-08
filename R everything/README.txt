@@ -1,5 +1,3 @@
-asfd test
-
 Here's what you need to know to run R, with the function I wrote
 
 download R from google drive or from
@@ -21,7 +19,7 @@ cmds <- function(){ };
 
 cmds <- edit(cmds);
 
-//at this point, open up the cmds_source file,
+//at this point, open up the cmds_source.r file,
 //and copy/paste it all into the box that opens,
 // Ctrl + S, then close the box.  Nothing should complain.
 // the next command carrot ">" should pop up in the main

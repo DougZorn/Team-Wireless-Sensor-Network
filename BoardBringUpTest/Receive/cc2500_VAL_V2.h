@@ -20,7 +20,6 @@
 /* Modulated = true */
 /* Channel number = 0 */
 /* PA table */
-#define PA_TABLE {0xfe,0x00,0x00,0x00,0x00,0x00,0x00,0x00,}
 
 #ifndef CC2500_VAL_V2_H
 #define CC2500_VAL_V2_H
@@ -89,5 +88,4 @@
 #define VAL_RCCTRL0_STATUS    0x00    //Last RC Oscillator Calibration Result 
 
 #endif
-
 

@@ -22,7 +22,7 @@ void initializePWMs()
   OCR0A = 11;  //pitch pin 6
   OCR0B = 11;  //rudder pin5
   OCR1A = 11;  //roll pin 9
-  OCR1B = 11;  //thrust pin 10
+  OCR1B = 10;  //thrust pin 10
 }
 
 //range of value is 7 to 14. Neutral is 10.
@@ -60,8 +60,8 @@ void disarmMotors(void)
 {
   writeThrust(7);
   writeRudder(7);
-  writePitch(11);
-  writeRoll(11);
+  writePitch(10);
+  writeRoll(10);
   delay(250);  
 }
 

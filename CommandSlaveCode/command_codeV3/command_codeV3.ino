@@ -132,30 +132,6 @@ int goodMsg = 0;
 //Helps coordinate timeout
 byte lastHeardFrom;
 
-typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, Pitch, Yaw
-  int16_t  accSmooth[3];            //smoother version of accADC
-  int16_t  gyroData[3];             //Not sure
-  int16_t  magADC[3];              //180deg = 180, -180deg = -180
-  int16_t  gyroADC[3];             //raw gyro data
-  int16_t  accADC[3];              //raw accelerometer data
-} imu_t;
-
-typedef struct {
-  uint8_t  vbat;               // battery voltage in 0.1V steps
-  uint16_t intPowerMeterSum;
-  uint16_t rssi;              // range: [0;1023]
-  uint16_t amperage;
-} analog_t;
-
-typedef struct {
-  int32_t  EstAlt;             // in cm
-  int16_t  vario;              // variometer in cm/s
-} alt_t;
-
-typedef struct {
-  int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-  int16_t heading;             // variometer in cm/s
-} att_t;
 
 /*
 //This function converts Serial values which can be negative into positive bytes

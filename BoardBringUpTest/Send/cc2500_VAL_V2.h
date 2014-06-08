@@ -33,7 +33,7 @@
 #define VAL_SYNC1             0xD3    //Sync Word, High Byte 
 #define VAL_SYNC0             0x91    //Sync Word, Low Byte 
 #define VAL_PKTLEN            0xFF    //Packet Length: This is max legnth when PKTCTRL0 = 1 
-#define VAL_PKTCTRL1          0x0F    //Packet Automation Control 7 appends 3 does not LQI RSSI. 0x00 no address check
+#define VAL_PKTCTRL1          0x0F    //Packet Automation Control 7 appends 3 does not LQI RSSI
 #define VAL_PKTCTRL0          0x05    //Packet Automation Control //Variable Packet length, Whitening off, cc2400 support off, CRC check
 #define VAL_ADDR              0x05    //Device Address 
 #define VAL_CHANNR            0x00    //Channel Number 
@@ -89,5 +89,3 @@
 #define VAL_RCCTRL0_STATUS    0x00    //Last RC Oscillator Calibration Result 
 
 #endif
-
-
