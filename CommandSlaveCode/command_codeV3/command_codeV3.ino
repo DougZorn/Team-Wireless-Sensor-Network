@@ -14,7 +14,7 @@
 #include "read_write.h"
 
 //Number of nodes, including Command Node
-const byte NUM_NODES = 5;
+const byte NUM_NODES = 4;
 byte RST[PACKET_LENGTH];
 
 //The LED PIN
@@ -138,6 +138,7 @@ typedef struct {
 } 
 att_t;
 
+
 /*
 //This function converts Serial values which can be negative into positive bytes
  int byteToInt(byte input){
@@ -192,12 +193,15 @@ void userCom(){
     }
     while(Serial.available());
 
+    //char *tempStore = "-3 38\n0 127 127\n1 132 143\n-4 38";
+    
+
     // delay(200);
      //Serial.print("I got ");
      //Serial.print(userCommand);
      //Serial.print("\n");
 
-    //Serial.print("State 1\n");
+//Serial.print("State 1\n");
 
     
      int mostRecent3 = 0;
@@ -208,6 +212,7 @@ void userCom(){
      if(userCommand[i] == '-' && userCommand[i+1] == '3') {
      secondMostRecent3 = mostRecent3;
      mostRecent3 = i;
+     
      }
      if(userCommand[i] == '-' && userCommand[i+1] == '4') mostRecent4 = i;
      }
@@ -222,7 +227,12 @@ void userCom(){
      for(int i = mostRecent3; i < mostRecent4; i++){
      snippedCommand[countX++] = userCommand[i];
      }
+     
      /*
+    Serial.print("userCommand = ");
+    Serial.print(userCommand);
+    Serial.print("\n");
+    
     Serial.print("snippedCommand = ");
     Serial.print(snippedCommand);
     Serial.print("\n");
@@ -241,19 +251,10 @@ void userCom(){
 
 
      
-     Serial.print("State 2\n");
+     Serial.print("State 2\n");*/
      //arg1 is line
      //arg2 is first entry in line
      
-
-  
-  
-  
-
-    Serial.print("userCommand = ");
-    Serial.print(userCommand);
-    Serial.print("\n");*/
-
 
     arg1 = strtok_r(snippedCommand, "\n", &tempCommand1);
 
@@ -287,10 +288,11 @@ void userCom(){
       }
       else if(!strcmp(arg2, "-3")){
 
-        Serial.print("State Got -3\n");
+        //Serial.print("State Got -3\n");
 
         //handle next/all
         sequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
+        
         
         //Serial.print("sequenceNumber = ");
         //Serial.print(sequenceNumber);
@@ -299,6 +301,7 @@ void userCom(){
       else if(!strcmp(arg2, "-4")){
         //handle next/all
         endSequenceNumber = atoi(strtok_r(NULL, " ", &tempCommand2));
+        
         
         //Serial.print("State Got -4\n");
         
@@ -314,8 +317,9 @@ void userCom(){
         arg3 = strtok_r(NULL, " ", &tempCommand2);
         arg4 = strtok_r(NULL, " ", &tempCommand2);
         
-        currLoc[nodeNum][0] = atoi(arg3);
-        currLoc[nodeNum][1] = atoi(arg4);
+        currLoc[nodeNum][0] = byte(atoi(arg3));
+        currLoc[nodeNum][1] = byte(atoi(arg4));
+        
         
         //Serial.print("currLoc[nodeNum][0] = ");
         //Serial.print( currLoc[nodeNum][0]);
@@ -442,7 +446,6 @@ void userCom(){
 
   //This just hardcodes some values into the Desired table, as bytes
   randomSeed(analogRead(3));
-  int desired[NUM_NODES][2];
   for(int i = 0; i < NUM_NODES; i++){
     desired[i][0] = roundUp(random(30,230));  //roundUp((rand() % 200) + 30);  //gets a range of randoms from -100ish to 100ish
     desired[i][1] = roundUp(random(30,230)); //roundUp((rand() % 200) + 30);
@@ -568,7 +571,6 @@ void loop(){
         distances[h][i] = distances[i][h];
       }
     }
-    
     //Transmit data through serial
      roundNumber = roundNumber + 1;
      //Hard-coded formatting that R knows to accept, starting with round number and number of nodes
@@ -619,7 +621,6 @@ void loop(){
     //receive "-4 [roundNumber]" back (signifies end of transmission)
     //For now, just delay for a second
     delay(100);
-    
     userCom();
 
 
@@ -642,8 +643,8 @@ void loop(){
     //Send current locations and commands a few times
     for(int j = 0; j < REDUNDANCY; j++){
       for(int i = 0; i < NUM_NODES; i++){
-        sendPacket(MY_NAME, i, currLoc[i][0], currLoc[i][1], 0, 0);
-        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 0, 0); //!!!!!!!!!!!!!!!! which one identifies the type of
+        sendPacket(MY_NAME, i, currLoc[i][0], currLoc[i][1], 201, 0);
+        sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 202, 0); //!!!!!!!!!!!!!!!! which one identifies the type of
       }
     }
 

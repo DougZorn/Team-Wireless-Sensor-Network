@@ -38,9 +38,9 @@ const byte NUM_NODES = 5;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 4;
-const byte      PREV_NODE = 3;
-const byte PREV_PREV_NODE = 1;
+const byte        MY_NAME = 1;
+const byte      PREV_NODE = 0;
+const byte PREV_PREV_NODE = 3;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -259,15 +259,10 @@ int modeAdjust(){
 
 //Converts values from 0-255 to (-)127-128
 int byteToInt(byte input){
-  if(input > 128){
-    input = input - 128;
-    return input;
-  }
-  else if(input < 128){
-    input = input * -1;
-    return input;
-  }
-  else return 0;
+  int returnNumber;
+  returnNumber = int(input) - 127;
+  
+  return returnNumber;
 }
 
 //Rounds ints and casts to byte 
@@ -706,6 +701,12 @@ void loop(){
       Serial.print(currMsg[SENDER]);
       Serial.print(" to ");
       Serial.print(currMsg[TARGET]);
+      Serial.print(" data1 ");
+      Serial.print(currMsg[2]);
+      Serial.print(" data2 ");
+      Serial.print(currMsg[3]);
+      Serial.print(" hops ");
+      Serial.print(currMsg[4]);
       Serial.print(" end ");
       Serial.println(currMsg[END_BYTE]);
     }
@@ -1056,10 +1057,10 @@ void loop(){
     
     byte turn;
     
-    desX = 75;
-    desY = 30;
-    currX = 90;
-    currY = 10;
+    //desX = 75;
+    //desY = 30;
+    //currX = 90;
+    //currY = 10;
     
     double dX = desX - currX;
     double dY = desY - currY;
