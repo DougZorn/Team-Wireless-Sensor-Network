@@ -5,9 +5,7 @@ void setup() {
   Serial.begin(9600);
 }
 
-void loop() {
-  // read the value from the sensor:
-  //delay(200);
+void loop() { 
   SonicValue = analogRead(UltraSonicPin);
   Serial.println(SonicValue,DEC);
   

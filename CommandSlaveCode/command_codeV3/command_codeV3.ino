@@ -26,8 +26,6 @@ const int RECEIVE = 1;
 const int CALCULATE = 2;
 int state = INIT;
 
-//used for user Arguments, it will make command node stuck at userCom until further commands
-int stuckUser;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
@@ -109,34 +107,6 @@ int goodMsg = 0;
 //Helps coordinate timeout
 byte lastHeardFrom;
 
-typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, Pitch, Yaw
-  int16_t  accSmooth[3];            //smoother version of accADC
-  int16_t  gyroData[3];             //Not sure
-  int16_t  magADC[3];              //180deg = 180, -180deg = -180
-  int16_t  gyroADC[3];             //raw gyro data
-  int16_t  accADC[3];              //raw accelerometer data
-} 
-imu_t;
-
-typedef struct {
-  uint8_t  vbat;               // battery voltage in 0.1V steps
-  uint16_t intPowerMeterSum;
-  uint16_t rssi;              // range: [0;1023]
-  uint16_t amperage;
-} 
-analog_t;
-
-typedef struct {
-  int32_t  EstAlt;             // in cm
-  int16_t  vario;              // variometer in cm/s
-} 
-alt_t;
-
-typedef struct {
-  int16_t angle[2];            // absolute angle inclination in multiple of 0.1 degree    180 deg = 1800
-  int16_t heading;             // variometer in cm/s
-} 
-att_t;
 
 
 /*
@@ -517,7 +487,7 @@ void loop(){
       currTime = millis() - lastTime;
     }
 
-    //Debug printing
+  //Debug printing
     //Serial.print("l ");
     //Serial.println(lastTime);
     //Serial.print("c ");
@@ -542,8 +512,7 @@ void loop(){
     if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){
       state = CALCULATE;
       wantNewMsg = false;
-    } 
-    else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){
+    } else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){
       //Serial.println("Timeout");
       state = CALCULATE;
       lastTime = millis();
@@ -647,8 +616,6 @@ void loop(){
         sendPacket(MY_NAME, i, desired[i][0], desired[i][1], 202, 0); //!!!!!!!!!!!!!!!! which one identifies the type of
       }
     }
-
-    //why not broadcast to all node to end it, since they are all easedropping.
     sendPacket(MY_NAME, NUM_NODES, desired[NUM_NODES][0], desired[NUM_NODES][1], 1, 1); 
 
     lastHeardFrom = MY_NAME;
@@ -666,12 +633,12 @@ void loop(){
     //Check if there is already an average, if so, do filter, if not just add data in appropriate position
     //(in both cases pointer must be incremented or looped
     if(rssiAvg[currMsg[SENDER]] != 0){
-      //Filter RSSI based on +-10 around running average
+    //Filter RSSI based on +-10 around running average
       //if(currMsg[RSSI_INDEX] < rssiAvg[currMsg[SENDER]] + 10 && currMsg[RSSI_INDEX] > rssiAvg[currMsg[SENDER]] - 10){
-      rssiData[currMsg[SENDER]][rssiPtr[currMsg[SENDER]]] = currMsg[RSSI_INDEX];
-      if(rssiPtr[currMsg[SENDER]] == STRUCT_LENGTH - 1) rssiPtr[currMsg[SENDER]] = 0;  //Loop pointer around if it's reached the end of the array
-      else rssiPtr[currMsg[SENDER]] += 1;                              //..otherwise just increment
-
+        rssiData[currMsg[SENDER]][rssiPtr[currMsg[SENDER]]] = currMsg[RSSI_INDEX];
+        if(rssiPtr[currMsg[SENDER]] == STRUCT_LENGTH - 1) rssiPtr[currMsg[SENDER]] = 0;  //Loop pointer around if it's reached the end of the array
+        else rssiPtr[currMsg[SENDER]] += 1;                              //..otherwise just increment
+        
       //}
     }
     else{
@@ -793,8 +760,4 @@ void loop(){
 
 
 }
-
-
-
-
 
