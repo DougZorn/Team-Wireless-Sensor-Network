@@ -2,7 +2,7 @@ function(){
 
 	prevRound <- -1
 	roundNumber <- 0
-
+	
 	#Infinite loop, CMDS will run until ESC is hit in R command window
 	repeat{
 		index <- 0
@@ -27,7 +27,7 @@ function(){
 					size <- line[3] 
 					
 					#Make empty matrix/names matrix of appropriate sizes
-					data <- matrix(c(rep(0,size*size)), size, size) 
+					data <- matrix(c(rep(0,size * size)), size, size) 
 					desired <- matrix(c(rep(0,size*2)), size, 2)
 					
 					index <- index + 1
@@ -80,7 +80,8 @@ function(){
 		roundNumber <- roundNumber + 1;
 		
 		
-		print("Round Change, processing..")
+		print("Round Change, processing.. ")
+		print(roundNumber - 1)
 		flush.console()
 		
 		#Checking for any inappropriate null values
@@ -162,11 +163,34 @@ function(){
 				
 				fit$points <- fit$points %*% rotate
 				
-				
 				#Test for flip.  Use third anchor point to test if matrix has flipped orientation
 				#"tol" is tolerance of how close points need to be to deem a flip necessary
-				tol <- 4
-				if((fit$points[3,1] > x3 + tol) || (fit$points[3,1] < x3 - tol) || (fit$points[3,2] > y3 + tol) || (fit$points[3,2] < y3 - tol)){
+				tol <- 72
+				print("x3 is ")
+				print(x3)
+				print("y3 is ")
+				print(y3)
+				print("calcX is ")
+				print(fit$points[3,1])
+				print("calcY is ")
+				print(fit$points[3,2])
+				
+				if(fit$points[3,1] < -x3 + tol) print("first")
+				if(fit$points[3,1] > -x3 - tol) print("second")
+				if(fit$points[3,2] < -y3 + tol) print("third")
+				if(fit$points[3,2] > -y3 - tol) print("fourth")
+				
+				
+				flush.console()
+				
+				
+				
+				if(((fit$points[3,1] < -x3 + tol) && 
+					(fit$points[3,1] > -x3 - tol) && 
+					(fit$points[3,2] < -y3 + tol) && 
+					(fit$points[3,2] > -y3 - tol))){
+					print("flipping")
+					flush.console()
 					
 					#Flip is needed, so flip across X axis
 					flip <- matrix(c(1,0,0,-1),2,2)
@@ -243,13 +267,13 @@ function(){
 				#par(new=TRUE)
 				
 				#Plot desired points
-				xx <- desired[,1]
-				yy <- desired[,2]
-				text(xx,yy,labels = row.names(desired), cex=1.2)
-				text(xx + 15.0, yy, paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
+				#xx <- desired[,1]
+				#yy <- desired[,2]
+				#text(xx,yy,labels = row.names(desired), cex=1.2)
+				#text(xx + 15.0, yy, paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
 				
 				#Draw a nifty arrow
-				arrows(x, y, xx, yy, length = .15, angle = 20, code = 2, col = "red")
+				#arrows(x, y, xx, yy, length = .15, angle = 20, code = 2, col = "red")
 				
 				
 				#Round calculations, print to file
@@ -257,7 +281,7 @@ function(){
 				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 				for(i in 1:size){
 					cat(i-1, file = "Routput.txt", append = TRUE)
-					cat(" ", file = "Routput.txt", append = TRUE)	
+					cat(" ", file = "Routput.txt", append = TRUE)
 					cat(round(x[i] + 127), file = "Routput.txt", append = TRUE)
 					cat(" ", file = "Routput.txt", append = TRUE)
 					cat(round(y[i] + 127), file = "Routput.txt", append = TRUE, sep = "\n")
@@ -276,5 +300,5 @@ function(){
 		#dev.copy(jpeg, filename="plot.jpg")
 		#dev.off()
 	}
-	return(fit)
+	return(fit$points)
 }
