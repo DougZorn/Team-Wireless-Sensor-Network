@@ -26,8 +26,8 @@ int ledPin = 9;
 //int ledPin = 4; //V2
 
 //Timer info
-const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
-const unsigned long TIMEOUT_P = 10; 
+const unsigned long TIMEOUT_PP = 300; //??? check this timeout number stub
+const unsigned long TIMEOUT_P = 100; 
 
 
 //At the right height level
@@ -38,9 +38,9 @@ const byte NUM_NODES = 4;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 3;
-const byte      PREV_NODE = 2;
-const byte PREV_PREV_NODE = 1;
+const byte        MY_NAME = 1;
+const byte      PREV_NODE = 0;
+const byte PREV_PREV_NODE = 3;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;

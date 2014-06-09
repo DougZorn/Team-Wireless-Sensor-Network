@@ -399,6 +399,14 @@ void userCom(){
  }
  */
  
+ //Converts values from 0-255 to (-)127-128
+int byteToInt(byte input){
+  int returnNumber;
+  returnNumber = int(input) - 127;
+  
+  return returnNumber;
+}
+
  void setup(){
   Serial.begin(9600);
   init_CC2500_V2();
@@ -512,7 +520,7 @@ void loop(){
     if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){
       state = CALCULATE;
       wantNewMsg = false;
-    } else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){
+    } else if(((lastHeardFrom == PREV_PREV_NODE) && (currTime > TIMEOUT_PP))||((lastHeardFrom == PREV_NODE) && (currTime > TIMEOUT_P))){
       //Serial.println("Timeout");
       state = CALCULATE;
       lastTime = millis();
@@ -580,7 +588,7 @@ void loop(){
      Serial.print("-2 ");
      Serial.print(i);
      Serial.print(" 1 ");
-     Serial.println(desired[i][1]);
+     Serial.println(byteToInt(desired[i][1]));
      }
      //Send round number again, as "end of serial transmission" indicator
      Serial.print("-4 ");
