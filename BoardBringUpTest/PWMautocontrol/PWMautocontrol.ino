@@ -13,10 +13,10 @@ void setup()
   delay(100);  
   writeThrust(10);
   delay(100);  
-  writeThrust(11);
-  delay(175);  
-  writeThrust(10);
-  delay(125);
+  //writeThrust(11);
+  //delay(25);  
+  //writeThrust(10);
+  //delay(75);
   writeThrust(9);
   delay(200);  
   writeThrust(8);  
