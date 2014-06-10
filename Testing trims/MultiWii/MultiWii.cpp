@@ -1070,30 +1070,7 @@ void loop () {
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0;
-    /*
-    //Account for PWM discrete values
-     for(i = 0; i<4; i++){
-     rcData[i]-= 34;
-     }
-     //Check if value is fluctuating in small interval
-     for(i = 0; i<4; i++){
-     if((rcData[i] < lastValue[i]+3) && (rcData[i] > lastValue[i]-3)){ //If it is, set it to the last assigned value
-     rcData[i] = setValue[i];
-     rcCommand[i] = setValue[i];
-     lastValue[i] = rcData[i]; //Save current value to compare for next time
-     }
-     else{                        //If not, set a new assigned value
-     setValue[i] = rcData[i];
-     lastValue[i] = rcData[i];
-     }
-     }
-     for(i = 0; i<4; i++){
-     if((rcData[i] < 1506) && (rcData[i] > 1494)){ //If it is, set it to the last assigned value
-     rcCommand[i] = 1500;
-     rcData[i] = 1500;
-     }
-     }
-     */
+
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
 #if ACC
     if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) {
@@ -1380,6 +1357,7 @@ void loop () {
 #endif
   int j;
   //**** PITCH & ROLL & YAW PID ****
+  ////////////////////////////////////Gyro Weighted History///////////////////////////////////////////////////
 #if PID_CONTROLLER == 1 // evolved oldschool
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
   for(j = 4; j>0; j--){
