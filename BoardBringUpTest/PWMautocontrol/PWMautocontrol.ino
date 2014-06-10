@@ -7,6 +7,7 @@ void setup()
   // put your setup code here, to run once:
   initializePWMs();
   ArmMotors();  
+
   delay(100);
   writeThrust(9);
   delay(100);  

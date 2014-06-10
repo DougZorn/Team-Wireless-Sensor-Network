@@ -20,12 +20,18 @@
 SoftwareSerial mySerial(8, 7);   // RX, TX
 
 
+//Set if there is Logging
+boolean logToggle = true;
+//boolean logToggle = false;
+
 //The LED PIN
-int ledPin = 4;
+
+//int ledPin = 9;
+int ledPin = 4; //V2
 
 //Timer info
-const unsigned long TIMEOUT_PP = 30; //??? check this timeout number stub
-const unsigned long TIMEOUT_P = 10; 
+const unsigned long TIMEOUT_PP = 300; //??? check this timeout number stub
+const unsigned long TIMEOUT_P = 100; 
 
 
 //At the right height level
@@ -36,9 +42,9 @@ const byte NUM_NODES = 4;
 
 //Names of Node and nodes before it
 //Determines when this node's turn is
-const byte        MY_NAME = 1;
-const byte      PREV_NODE = 0;
-const byte PREV_PREV_NODE = 3;
+const byte        MY_NAME = 3;
+const byte      PREV_NODE = 2;
+const byte PREV_PREV_NODE = 1;
 
 //flag for checking if RSSI array is full
 boolean RSSIArrayFull;
@@ -156,6 +162,100 @@ boolean horizonMode_Control;
 boolean baroMode_Control;
 boolean magMode_Control;
 
+//loging information
+String logMotor = "Disarmed";
+String logHeightState = "N/A";
+String logLevelAction = "N/A";
+String logDirection = "N/A"; 
+String logTurn = "N/A";
+String logTooClose = "N/A";
+String logMovement = "N/A";
+String logState = "Idle";
+String logArrayStat = "N/A";
+int logTime = 0;
+double logAngle= 0;
+
+//structure for holding sensor information
+typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, Pitch, Yaw
+  int16_t  accSmooth[3];            //smoother version of accADC
+  int16_t  gyroData[3];             //Not sure
+  int16_t  magADC[3];              //180deg = 180, -180deg = -180
+  int16_t  gyroADC[3];             //raw gyro data
+  int16_t  accADC[3];              //raw accelerometer data
+  int32_t  EstAlt;             // in cm
+  int16_t  vario;              // variometer in cm/s
+  int16_t  heading;
+  uint32_t ultraSonic;        //in cm
+} data_t;
+
+data_t myData;
+//used for backup incase of screwup
+data_t oldData;
+
+void logOuput(boolean Toggle){
+ if((logTime++>10)&&Toggle){
+     
+     Serial.println(" ");
+     
+     Serial.print("Motors: ");
+     Serial.print(logMotor);
+     Serial.print("        State Machine: ");
+     Serial.print(logState);
+     Serial.print("        RSSI Array: ");
+     Serial.println(logArrayStat);
+     
+     Serial.print("Ultrosonic Height: ");
+     Serial.print(myData.ultraSonic);
+     Serial.print("        Barometer Height: ");
+     Serial.print(myData.EstAlt);
+     Serial.print("        State: ");
+     Serial.print(logHeightState);
+     Serial.print("        Action: ");
+     Serial.println(logLevelAction);
+     
+     Serial.print("Current X,Y: ");
+     Serial.print(currX);
+     Serial.print(" , ");
+     Serial.print(currY);
+     Serial.print("        Desired X,Y: ");
+     Serial.print(desX);
+     Serial.print(" , ");
+     Serial.print(desY);
+     Serial.print("        Copter Angle: ");
+     Serial.print(myData.heading);
+     Serial.print("        Caculated Angle: ");
+     Serial.println(logAngle);
+     
+     Serial.print("Copter Turn: ");
+     Serial.print(logTurn);
+     Serial.print("        Other Copters: ");
+     Serial.print(logTooClose);     
+     Serial.print("        Copters Movement: ");
+     Serial.println(logMovement);
+     
+     if(horizonMode_Control == mode_on){
+       Serial.print("horizonMode_Control: On");
+     }else{
+       Serial.print("horizonMode_Control: Off");
+     }
+     
+     if(baroMode_Control == mode_on){
+       Serial.print("    baroMode_Control: On");
+     }else{
+       Serial.print("    baroMode_Control: Off");
+     }
+     
+     if(magMode_Control == mode_on){
+       Serial.print("    magMode_Control: On");
+     }else{
+       Serial.print("    magMode_Control: Off");
+     }
+     
+     Serial.println(" ");
+     
+     logTime = 0; 
+   } 
+}
 
 byte readMaster_Mode(int modeID, char* arg){  //read mode that master wants to be in
   switch(modeID){
@@ -257,15 +357,10 @@ int modeAdjust(){
 
 //Converts values from 0-255 to (-)127-128
 int byteToInt(byte input){
-  if(input > 128){
-    input = input - 128;
-    return input;
-  }
-  else if(input < 128){
-    input = input * -1;
-    return input;
-  }
-  else return 0;
+  int returnNumber;
+  returnNumber = int(input) - 127;
+  
+  return returnNumber;
 }
 
 //Rounds ints and casts to byte 
@@ -274,23 +369,6 @@ byte roundUp(float input){
   return byte(output);
 }
 
-//structure for holding sensor information
-typedef struct {                    //array[3] because x,y,z or 1,2,3 or Roll, Pitch, Yaw
-  int16_t  accSmooth[3];            //smoother version of accADC
-  int16_t  gyroData[3];             //Not sure
-  int16_t  magADC[3];              //180deg = 180, -180deg = -180
-  int16_t  gyroADC[3];             //raw gyro data
-  int16_t  accADC[3];              //raw accelerometer data
-  int32_t  EstAlt;             // in cm
-  int16_t  vario;              // variometer in cm/s
-  int16_t  heading;
-  uint32_t ultraSonic;        //in cm
-} data_t;
-
-data_t myData;
-
-//used for backup incase of screwup
-data_t oldData;
 
 /*  //might need it
 typedef struct {
@@ -543,7 +621,7 @@ void flightFunction(){
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
     
     
-    Serial.println("");
+    //Serial.println("");
     //Serial.print("I am in Flight Mode, OnOff = ");
     //Serial.print(OnOff, DEC);
     //Serial.println("");
@@ -551,7 +629,8 @@ void flightFunction(){
     
     //arm the motor once here
     if(OnOff==0){
-      ArmMotors();
+      logMotor = "Armed";
+      //ArmMotors();
       OnOff = 2;
     }
     
@@ -568,8 +647,10 @@ void flightFunction(){
       heightLevel = 0x0C;
       
       writeThrust(heightLevel);
-      Serial.print("Too low: ");
+      //Serial.print("Too low: ");
       //Serial.print(heightLevel,DEC);
+      logHeightState = "Below Expected Height";
+      logLevelAction = "Up";
     }else if(myData.ultraSonic > maxHeight){                                             //lower if too above 182 - 190 cm rangle
     
     
@@ -578,44 +659,60 @@ void flightFunction(){
       heightLevel = 0x0B;
       
       writeThrust(heightLevel);
-      Serial.print("Too High: ");
+      //Serial.print("Too High: ");
       //Serial.print(heightLevel,DEC);
+      
+      
+      logHeightState = "Above Expected Height";
+      logLevelAction = "Down";
+      
     }else{
       
-      Serial.print("Just Right: ");
+      logHeightState = "About Correct Height";
+      logLevelAction = "Staty at Level";
+      
+      //Serial.print("Just Right: ");
       //Serial.print(heightLevel,DEC);
       
       writeThrust(heightLevel);        //keep current level
       atLevel =true;
     }
   }else if(Flight == 1){
+    
     if(myData.ultraSonic <= 21){    //if it is close to ground
       if(myData.EstAlt <5){        //it is right at top of ground
         writeThrust(0x07);          //turns to lowest settings
          
          
+      logHeightState = "On Ground";
+      logLevelAction = "Land";
          
          
-    Serial.println("");
-    Serial.println("I am in Land Mode for once");
+    //Serial.println("");
+    //Serial.println("I am in Land Mode for once");
         //disarm if shutdown
         //don't if it is just land
         //set a flag for arming, disarming in shutdown, not disarming in land, might add reset command
         
       if(OnOff==1){
         
-        Serial.println("Disarmed");
+        logMotor = "Disarmed";
+        //Serial.println("Disarmed");
         disarmMotors();
         OnOff = 2;
       }
         
-    Serial.println("");
+    //Serial.println("");
          
         Flight = 2;                //set it so it will ignore flight and land
       }else{                       //if close but not above ground
         writeThrust(0x09);         //slowly go down because it is close to ground
       }
     }else{                         //if not even close to ground
+    
+      logHeightState = "Above Ground";
+      logLevelAction = "Down";
+      
       writeThrust(0x08);           //descend morderately
     }
   }
@@ -632,9 +729,6 @@ void setup(){
   Serial.println("In Setup");
   mySerial.begin(9600);
   
-  
-  
-  
   Serial.println("After UART");
   init_CC2500_V2();
   
@@ -648,19 +742,16 @@ void setup(){
   initializePWMs();
   pinMode(ledPin,OUTPUT);
   
-  
-  Serial.println("After LED");
-  
   resetData();
   
+  Serial.println("Data Init");
   
-  Serial.println("After resetData");
+  //changeMode(readMaster_Mode(1,"on"));
   
-  Serial.println("Out Setup");
+  //modeAdjust();
   
-  changeMode(readMaster_Mode(1,"on"));
-  
-  modeAdjust();
+  Serial.println("Program Start");
+  Serial.println(" ");
 }
 
 void loop(){
@@ -699,13 +790,21 @@ void loop(){
     else{
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
+      /*
       lastHeardFrom = currMsg[SENDER];
       Serial.print("Msg from ");
       Serial.print(currMsg[SENDER]);
       Serial.print(" to ");
       Serial.print(currMsg[TARGET]);
+      Serial.print(" data1 ");
+      Serial.print(currMsg[2]);
+      Serial.print(" data2 ");
+      Serial.print(currMsg[3]);
+      Serial.print(" hops ");
+      Serial.print(currMsg[4]);
       Serial.print(" end ");
-      Serial.println(currMsg[END_BYTE]);
+      Serial.println(currMsg[END_BYTE]);*/
+     
     }
   }
 
@@ -718,7 +817,8 @@ void loop(){
     //Idle case is directly to wait until the command node sends startup message,
     //then is never used again
   case IDLE_S: 
-    Serial.println("IDLE");
+    //Serial.println("IDLE");
+    logState = "IDLE";
     digitalWrite(ledPin, LOW);
 
     //Serial.println("Idle State");
@@ -733,12 +833,26 @@ void loop(){
     //Decide case is just to control whether to go to RECEIVE or SEND
   case DECIDE:
     //Serial.println("DECIDE");
+    
+    logState = "DECIDE";
     digitalWrite(ledPin, LOW);
     //Serial.println("Decide State");
+
+    
+    //Serial.print("currMsg = ");
+    //Serial.println(currMsg[SENDER], DEC);
+    
+    //Serial.print("lastHeardFrom = ");
+    //Serial.println(lastHeardFrom, DEC);
+    
+    
+    
 
     //if you hear something from prev_prev, and it's actually a good message, reset the timer
     if((currMsg[SENDER] == PREV_PREV_NODE || currMsg[SENDER] == PREV_NODE) && gotNewMsg){
       lastTime = millis();
+      
+      //Serial.println("im in last time");
     }
 
     //stub, this allows the case where prev_prev fails, and the node hasn't heard from prev_prev
@@ -747,7 +861,14 @@ void loop(){
     //for whether you've last heard anything from prev
     if(lastHeardFrom == PREV_NODE || lastHeardFrom == PREV_PREV_NODE){
       currTime = millis() - lastTime;
+      //Serial.println("im in currTime");
     }
+    
+    //Serial.print("lastTime = ");
+    //Serial.println(lastTime, DEC);
+    
+    //Serial.print("currTime = ");
+    //Serial.println(currTime, DEC);
 
     //This node's turn occurs if either the previous node has sent its final message
     //or if the timeout has occurred since the previous previous node has sent its final message
@@ -755,23 +876,23 @@ void loop(){
       //state = IDLE_S;
       //wantNewMsg = false;
     //}else 
-    if(currMsg[SENDER] == PREV_NODE && currMsg[END_BYTE] == byte(1) && lastHeardFrom == PREV_NODE){
+    if((currMsg[SENDER] == PREV_NODE) && (currMsg[END_BYTE] == byte(1)) && (lastHeardFrom == PREV_NODE)){
       state = SEND;
       wantNewMsg = false;
       lastTime = millis();
       currTime = 0;
-     // Serial.println("a");
-    }else if((lastHeardFrom == PREV_PREV_NODE && currTime > TIMEOUT_PP)||(lastHeardFrom == PREV_NODE && currTime > TIMEOUT_P)){
+      //Serial.println("a");
+    }else if(((lastHeardFrom == PREV_PREV_NODE) && (currTime > TIMEOUT_PP))||((lastHeardFrom == PREV_NODE) && (currTime > TIMEOUT_P))){ //
       state = SEND;
       lastTime = millis();
       currTime = 0;
       wantNewMsg = false;
-     // Serial.println("b");
+      //Serial.println("b");
     }
     else if(gotNewMsg == false){ //If you didn't successfully get a packet this iteration, just stay in DECIDE and try again
       state = DECIDE;
       wantNewMsg = true;
-     // Serial.println("c");
+      //Serial.println("c");
     }
     else if(currMsg[TARGET]==MY_NAME){ //..otherwise just go to RECEIVE to handle cases next time, and don't pick up a new packet
       state = RECEIVE;
@@ -785,6 +906,9 @@ void loop(){
   case SEND:
     //Serial.println("SEND");
    // Serial.println("Send State");
+   
+    logState = "SEND";
+    
     digitalWrite(ledPin, HIGH);
 
     lastHeardFrom = MY_NAME;
@@ -807,6 +931,8 @@ void loop(){
 
       //..then send final packet with END set high
       sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
+      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
+      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
 
     }
     else{ //Not enough packets, send as many nulls as other nodes need to get an average from this node
@@ -817,7 +943,8 @@ void loop(){
       //..also send final packet with END set high
       sendPacket(MY_NAME, 255, 0, 0, 0, 1);//stub byte conversion with neg values
     }
-
+    
+    digitalWrite(ledPin, LOW);
     //Return to DECIDE and try to get new packet
     state = DECIDE;
     wantNewMsg = true;
@@ -826,8 +953,10 @@ void loop(){
     //RECEIVE state just control some special conditions that need to be looked for and caught,
     //specifically commands and timeout (additional timeout for prev_prev_prev_node can be added easily here)
   case RECEIVE:
-    Serial.println("RECEIVE");
-    Serial.println(" ");
+  
+    logState = "RECEIVE";
+    //Serial.println("RECEIVE");
+    //Serial.println(" ");
     //Serial.println("Receive State");
     digitalWrite(ledPin, LOW);
     if(currMsg[SENDER] == 0 && currMsg[CMD_TYPE] == 201){  //message contains this node's current position
@@ -840,12 +969,13 @@ void loop(){
       //stub, this is where movement variables are checked and changed (actual movement to be handled below)
     }
     
+   
     //Best place for calculating if movement needed
     
     //if in x or y direct, it is off by 3 inches on any side, move to desired location
-    //if(abs(currX - desX) > NEARTOLERANCE || abs(currY - desY) > NEARTOLERANCE){
+    if(abs(currX - desX) > NEARTOLERANCE || abs(currY - desY) > NEARTOLERANCE){
       moveRequired = true;  //more of like we got the desired and current location
-    //}
+    }
     
     state = DECIDE;
     wantNewMsg = true;
@@ -895,9 +1025,12 @@ void loop(){
       rssiAvg[currMsg[SENDER]] = temp/STRUCT_LENGTH;
       //Serial.print("RSSI AVG: ");
       //Serial.println(rssiAvg[currMsg[SENDER]], DEC);
+      
+      logArrayStat = "Full";
       RSSIArrayFull = true;
     }else{
-      Serial.println("RSSI Array Not Full");
+      //Serial.println("RSSI Array Not Full");
+      logArrayStat = "Not Full";
       RSSIArrayFull = false;
     }
 
@@ -921,10 +1054,14 @@ void loop(){
         Serial.println(currMsg[SENSOR_DATA]);
         Serial.print("Hop: ");
         Serial.println(currMsg[HOP]);*/
+        Serial.println("");
         Serial.println("RESETED");
+        Serial.println("");
       }
       if(currMsg[HOP] == 203){    //shutdown command
+        Serial.println("");
         Serial.println("SHUTDOWN");
+        Serial.println("");
         Flight = 1;
         OnOff = 1;
         //set flag for disarming moter
@@ -932,11 +1069,16 @@ void loop(){
       }
       if(currMsg[HOP] == 204){    //land command
         Flight = 1;
+        Serial.println("");
         Serial.println("LAND");
+        Serial.println("");
       }
       if(currMsg[HOP] == 205){    //FLIGHT command
         Flight =0;
+        
+        Serial.println("");
         Serial.println("FLIGHT");
+        Serial.println("");
       }
     }
     //Serial.println(" ");
@@ -979,42 +1121,14 @@ void loop(){
       break; 
     }
   }
-  /*
-   //debugg code
-  while((prtSpot < curSpot)&& upDated){
-    Serial.print(uartArray[prtSpot], HEX);
-    Serial.print(" ");
-    prtSpot++;
-  } 
-  
-  if(upDated==1){
-    Serial.println(" ");
-  }
-  
-  if(updateData(uartArray)==0){
-    //updateData(uartArray);
-    Serial.print(myData.magADC[0],DEC);
-    Serial.print(" ");
-    Serial.print(myData.magADC[1],DEC);
-    Serial.print(" ");
-    Serial.print(myData.magADC[2],DEC);
-    Serial.print(" ");
-    Serial.print(myData.heading,DEC);
-    Serial.print(" ");
-    Serial.print(myData.EstAlt,DEC);
-    Serial.println(" ");
-    Serial.print(myData.ultraSonic,DEC);
-    Serial.println(" ");
-  }*/
-  
+
   //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
-  moveRequired = true;
+  
+  //get ride of this later
+  //moveRequired = true;
+  
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
-  
-  
-  //Serial.println("Movement ProtoCol");
-  
   
   if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
@@ -1024,11 +1138,6 @@ void loop(){
     
     byte turn;
     
-    desX = 75;
-    desY = 30;
-    currX = 90;
-    currY = 10;
-    
     double dX = desX - currX;
     double dY = desY - currY;
     
@@ -1036,12 +1145,6 @@ void loop(){
     //radian = degree *pie/180
     double angle = atan(dY/dX);  // give -90 to 90
     angle = abs((180*angle)/3.14159265359);
-    
-    //Serial.println(" ");
-    //Serial.println("Distance Angle Test:");
-    //Serial.print("angle: ");
-    //Serial.println(angle, DEC);
-    
     
     if(dX < 0 && dY > 0){        //desX is more on the left than currX 
       angle = -1*(90 - angle);  
@@ -1052,6 +1155,8 @@ void loop(){
     }else if(dX > 0 && dY < 0){
       angle = (90 + angle);
     }
+    
+    logAngle = angle;
     
     int dist = int(sqrt(pow(double(dX), 2) + pow(double(dY), 2)));
     //how often to come in here, because it seems like the movements is going to be 
@@ -1075,8 +1180,6 @@ void loop(){
     Serial.println(dist, DEC);*/
     
     
-    
-    
     //Spin or Move
     //if you're more than 15 degrees off
     
@@ -1089,7 +1192,8 @@ void loop(){
     
     if(abs(myData.heading - angle) > 15){    //check to see which mag we want and adjust the statment
       
-    
+      logMovement = "Stay";
+      
       if((myData.heading - angle) <= 0){    
         //spin clockwise (when looking down on copter)
         
@@ -1099,6 +1203,7 @@ void loop(){
         turn =0x07;
         writeRudder(turn);
         
+        logTurn = "Left";
         Serial.print("turn , <= 0: ");
         Serial.println(turn, HEX);
         //Serial.print("turn:  <= 0    => ");
@@ -1110,6 +1215,7 @@ void loop(){
         turn =0x0D;
         writeRudder(turn);
         
+        logTurn = "Right";
         
         Serial.print("turn else: ");
         Serial.println(turn, HEX);
@@ -1120,6 +1226,8 @@ void loop(){
     }else if(dist > NEARTOLERANCE){
       
       Serial.println("in moving dist > NEARTOLERANCE ");
+      
+      logTurn = "Netural";
       
       boolean tooClose = false;
       
@@ -1138,11 +1246,15 @@ void loop(){
         //Serial.println(" ");
       if(tooClose){
         
+        logMovement = "Pitch Backward";
         //Serial.println("too close");
+        logTooClose = "Too Close, within 10 inch";
         writePitch(0x0B);    //if too close, stay on where it is
       }else{
         
+        logMovement = "Pitch Foward";
         //Serial.println("far");
+        logTooClose = "Clear";
         writePitch(0x0C);    //if not, continue moving forward
       }
       
@@ -1166,9 +1278,14 @@ void loop(){
   
   //Serial.println("flightFunction");
   
-   flightFunction();
- 
-  
+  //Function to control hover
+  flightFunction();
+
+  //Function to control Printing of information to Serial
+  logOuput(logToggle);
+   
+ //logging station
+   
   /***************************** Mode Handling *******************************************/
 /*
   Serial.println("");

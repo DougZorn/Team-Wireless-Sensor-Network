@@ -12,7 +12,7 @@
 #define CC2500_RXFIFO  0x3F
 #define CC2500_TXFIFO_BURST  0x7F
 #define CC2500_RXFIFO_BURST  0xFF
-#define TX_TIMEOUT 1 // in milliseconds
+#define TX_TIMEOUT 10 // in milliseconds
 #define PACKET_LENGTH 0X07
 #define SEND_FORLOOP 0x08
 #define ADDRESS 0xFF

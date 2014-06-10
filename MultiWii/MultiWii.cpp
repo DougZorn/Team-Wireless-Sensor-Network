@@ -844,8 +844,6 @@ void loop () {
       failsafeCnt++;
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
-	//ULTRASONIC DATA TO AUX CHANNEL FOR DEBUG
-	//rcData[4] = sensorDataU + 1500;	
 	
 
     // ------------------ STICKS COMMAND HANDLER --------------------
@@ -995,13 +993,10 @@ void loop () {
     
     uint16_t auxState = 0;
     
-      //comment out for autonmous
-   /*   
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
-   */
     
     for(i = 0; i<8;i++){
       rcData[i]-=34;
@@ -1402,8 +1397,6 @@ void loop () {
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
   
-
-  
   if(( waitRound >= 20)||(ackFlag != 0x00)){
     if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
       
@@ -1412,12 +1405,20 @@ void loop () {
       if(ackFlag != 0x00){
         constFlag = ackFlag;
       }
-      
 
       SerialWrite(1,64);
       SerialWrite(1,constFlag);
       
+      
       sendBit16(4, att.heading);  
+      
+      sendBit16(5, imu.gyroADC[0]);
+      sendBit16(6, imu.gyroADC[1]);
+      sendBit16(7, imu.gyroADC[2]);
+      
+      sendBit16(8, imu.accADC[0]);
+      sendBit16(9, imu.accADC[1]);
+      sendBit16(10, imu.accADC[2]);
       
       sendBit32(32,alt.EstAlt);
       
