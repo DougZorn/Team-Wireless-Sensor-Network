@@ -2,6 +2,7 @@
  *  
  *  Slave Node Code
  *  
+ *
  *  Before using, check:
  *  NUM_NODES, MY_NAME, PREV_NODE, PREV_PREV_NODE
  *
@@ -746,6 +747,7 @@ void setup(){
   
   Serial.println("Data Init");
   
+  
   //changeMode(readMaster_Mode(1,"on"));
   
   //modeAdjust();
@@ -762,14 +764,15 @@ void loop(){
   
   //Serial.println("wantNewMsg");
   
+  
+  //sent data across to multiwii for ultrasonic flight control
   myData.ultraSonic = analogRead(UltraSonicPin);
-  
-  
   mySerial.write(0x5A);
   writeData16((int16_t) myData.ultraSonic);
-  
   mySerial.write(((((myData.ultraSonic>>8)&0x00FF) + (myData.ultraSonic&0x00FF))%10));
   
+  
+  //check for packets
   if(wantNewMsg){
     //Save old values
     for(int i = 0; i < PACKET_LENGTH; i++){
@@ -931,9 +934,6 @@ void loop(){
 
       //..then send final packet with END set high
       sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
-      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
-      sendPacket(MY_NAME, i, distances[NUM_NODES], sensorData, 0, 1);
-
     }
     else{ //Not enough packets, send as many nulls as other nodes need to get an average from this node
       for(int i = 0; i < STRUCT_LENGTH; i++){
@@ -1183,14 +1183,14 @@ void loop(){
     //Spin or Move
     //if you're more than 15 degrees off
     
-      Serial.print(" I am in update, Heading: ");
-      Serial.print(myData.heading, DEC);    
-      Serial.print(", angle: ");
-      Serial.println(angle, DEC);
+     // Serial.print(" I am in update, Heading: ");
+      //Serial.print(myData.heading, DEC);    
+      //Serial.print(", angle: ");
+      //Serial.println(angle, DEC);
       
 
     
-    if(abs(myData.heading - angle) > 15){    //check to see which mag we want and adjust the statment
+    if(abs(myData.heading - angle) > 5){    //check to see which mag we want and adjust the statment
       
       logMovement = "Stay";
       
@@ -1204,8 +1204,8 @@ void loop(){
         writeRudder(turn);
         
         logTurn = "Left";
-        Serial.print("turn , <= 0: ");
-        Serial.println(turn, HEX);
+        //Serial.print("turn , <= 0: ");
+        //Serial.println(turn, HEX);
         //Serial.print("turn:  <= 0    => ");
         //Serial.println(turn, HEX);
         
@@ -1217,15 +1217,15 @@ void loop(){
         
         logTurn = "Right";
         
-        Serial.print("turn else: ");
-        Serial.println(turn, HEX);
+       // Serial.print("turn else: ");
+        //Serial.println(turn, HEX);
         
         //Serial.print("turn: else   => ");
         //Serial.println(turn, HEX);
       }
     }else if(dist > NEARTOLERANCE){
       
-      Serial.println("in moving dist > NEARTOLERANCE ");
+      //Serial.println("in moving dist > NEARTOLERANCE ");
       
       logTurn = "Netural";
       
@@ -1286,6 +1286,8 @@ void loop(){
    
  //logging station
    
+  modeAdjust();
+  
   /***************************** Mode Handling *******************************************/
 /*
   Serial.println("");
