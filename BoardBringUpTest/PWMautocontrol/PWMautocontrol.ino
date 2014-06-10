@@ -7,40 +7,21 @@ void setup()
   // put your setup code here, to run once:
   initializePWMs();
   ArmMotors();  
-  delay(300);
-  //writeThrust(9);
-  //delay(200);  
+
+  delay(100);
+  writeThrust(9);
+  delay(100);  
   writeThrust(10);
   delay(100);  
   writeThrust(11);
-  delay(100);  
-  writeThrust(12);
+  delay(175);  
+  writeThrust(10);
+  delay(125);
+  writeThrust(9);
   delay(200);  
-  //writeThrust(13); 
-  //delay(200);  
-  //writeThrust(12);   
-  //delay(200);
-  //writeThrust(13);   
-  //delay(200);
-  //writeThrust(14);   
-  //delay(200);
-  //writeThrust(15);   
-  //delay(200);
-  //writeThrust(16);   
-  //delay(200);
-  //writeThrust(17);   
-  //delay(200);
-  
-  writeThrust(11);
+  writeThrust(8);  
   delay(200);  
-  writeThrust(10);   
-  delay(200);  
-  //writeThrust(9);
-  //delay(100);  
-  //writeThrust(8);
-  //delay(100);  
-  //writeThrust(7);   
-  disarmMotors();
+  writeThrust(7);  
 }
 
 void loop()

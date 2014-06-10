@@ -22,35 +22,35 @@ void initializePWMs()
   OCR0A = 11;  //pitch pin 6
   OCR0B = 11;  //rudder pin5
   OCR1A = 11;  //roll pin 9
-  OCR1B = 10;  //thrust pin 10
+  OCR1B = 11;  //thrust pin 10
 }
 
 //range of value is 7 to 14. Neutral is 10.
 
 void writeRoll(byte value) //pin 9
 {  
-  OCR1A = value;    
+  OCR0B = value;    //was 1A
 }
 
 void writeThrust(byte value) //pin 10
 {
-  OCR1B = value;  
+  OCR0A = value;   //was 1b
 }
 
 void writeRudder(byte value) //pin 5
 {
-  OCR0B = value;  
+  OCR1A = value;  //was 0b
 }
 
 void writePitch(byte value) //pin 6
 {  
-  OCR0A = value;  
+  OCR1B = value;  //was 0A
 }
 
 void ArmMotors(void)
 {
   writeThrust(7);  
-  writeRudder(14);
+  writeRudder(15);
   delay(250);
   writeRudder(11);    
   writeThrust(8);
