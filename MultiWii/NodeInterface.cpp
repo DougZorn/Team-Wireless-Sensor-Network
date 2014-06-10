@@ -28,11 +28,15 @@
 
 #define SENSOR_UPDATE 0x5A
 
-int16_t sensorDataU = 0;
+int16_t sensorDataU = 200;
+
 
 byte lastOrder = 0;
 byte newOrder = 1;
-byte assemble_temp = 0;
+byte assemble_temp1 = 0;
+byte assemble_temp2 = 0;
+
+byte checkSum;
 
 byte checkNode()
 {  
@@ -66,12 +70,17 @@ byte checkNode()
       return newOrder;
       
       case (SENSOR_UPDATE):
-        assemble_temp = 0;
-        assemble_temp = SerialRead(1);
-        sensorDataU = assemble_temp <<8;
+        assemble_temp1 = 0;
+        assemble_temp2 = 0;
+        checkSum = 0;
+        assemble_temp1 = SerialRead(1);
+        assemble_temp2 = SerialRead(1);
+        checkSum = SerialRead(1);
         
-        assemble_temp = SerialRead(1);
-        sensorDataU += assemble_temp;
+        if(((checkSum == ((assemble_temp1 + assemble_temp2)%10)))&&((assemble_temp1 != 0)||(assemble_temp2 != 0))){
+          sensorDataU = assemble_temp1 <<8;
+          sensorDataU += assemble_temp2;
+        }
         return 0x00;     
       }
   }
