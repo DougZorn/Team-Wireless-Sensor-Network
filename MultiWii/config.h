@@ -240,7 +240,7 @@
      */
 
 
-    /* if you want to preset min/middle/max values for servos right after flashing, because of limited physical
+    /* if you want to preset min/middle/max values for servos right after flashin, because of limited physical
      * room for servo travel, then you must enable and set all three following options */
      //#define SERVO_MIN  {1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024}
      //#define  SERVO_MAX {2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048}
@@ -1009,7 +1009,7 @@
     /* to add debugging code
        not needed and not recommended for normal operation
        will add extra code that may slow down the main loop or make copter non-flyable */
-    //#define DEBUG
+    #define DEBUG
     //#define DEBUG_FREE // will add 'F' command to show free memory
 
     /* Use this to trigger LCD configuration without a TX - only for debugging - do NOT fly with this activated */
