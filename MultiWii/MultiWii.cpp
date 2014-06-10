@@ -854,6 +854,7 @@ void loop () {
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
+	
     if(stTmp == rcSticks) {
       if(rcDelayCommand<250) rcDelayCommand++;
     } else rcDelayCommand = 0;
@@ -874,7 +875,7 @@ void loop () {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
       }
     }
-    if(rcDelayCommand == 20) {
+if(rcDelayCommand == 20) {
       if(f.ARMED) {                   // actions during armed
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
@@ -988,17 +989,11 @@ void loop () {
         AccInflightCalibrationSavetoEEProm = 1;
       }
     #endif
-<<<<<<< HEAD
 
     for(i = 0; i < 4; i++){
      rcData[i] = rcData[i] - 36;
     }
 
-=======
-     
-    //maintainNode(); //maintain signal values for current flight mode status
-    
->>>>>>> yuyin2/master
     uint16_t auxState = 0;
     
     for(i=0;i<4;i++)
@@ -1068,7 +1063,8 @@ void loop () {
         }
       #endif
     #endif
-    #if MAG
+    
+	#if MAG
       if (rcOptions[BOXMAG]) {
         if (!f.MAG_MODE) {
           f.MAG_MODE = 1;
@@ -1400,6 +1396,8 @@ void loop () {
 #else
   #error "*** you must set PID_CONTROLLER to one existing implementation"
 #endif
+
+
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
@@ -1431,18 +1429,9 @@ void loop () {
       sendBit32(32,alt.EstAlt);
       
       SerialWrite(1,0xC0);
-<<<<<<< HEAD
-      //delay(100);
-=======
-      
->>>>>>> yuyin2/master
+
       waitRound = 0;
     }
   }
   waitRound++;
-  
-<<<<<<< HEAD
-  
-=======
->>>>>>> yuyin2/master
 }
