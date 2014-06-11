@@ -108,7 +108,6 @@ int goodMsg = 0;
 byte lastHeardFrom;
 
 
-
 /*
 //This function converts Serial values which can be negative into positive bytes
  int byteToInt(byte input){
@@ -410,6 +409,13 @@ int byteToInt(byte input){
  void setup(){
   Serial.begin(9600);
   init_CC2500_V2();
+  
+  Serial.println("After SPI Init");
+  
+  Serial.println(ReadReg(REG_IOCFG0),HEX);
+  Serial.println(ReadReg(REG_IOCFG1),HEX);
+  Serial.println(ReadReg(REG_IOCFG2),HEX);
+  
   pinMode(ledPin,OUTPUT);
   while(listenForPacket(RST)){
   }

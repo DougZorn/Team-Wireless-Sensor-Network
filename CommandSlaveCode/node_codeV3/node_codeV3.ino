@@ -13,8 +13,8 @@
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
-//#include "read_write.h"
-#include "read_writeV2.h"
+#include "read_write.h"
+//#include "read_writeV2.h"
 #include "motorcontrol.h"
 
 //Declare Pins for UART
@@ -22,13 +22,13 @@ SoftwareSerial mySerial(8, 7);   // RX, TX
 
 
 //Set if there is Logging
-boolean logToggle = true;
-//boolean logToggle = false;
+//boolean logToggle = true;
+boolean logToggle = false;
 
 //The LED PIN
 
-//int ledPin = 9;
-int ledPin = 4; //V2
+int ledPin = 9;
+//int ledPin = 4; //V2
 
 //Timer info
 const unsigned long TIMEOUT_PP = 300; //??? check this timeout number stub
@@ -727,6 +727,9 @@ void setup(){
   
   Serial.begin(9600);
   
+  Serial.print("Node Number: ");
+  Serial.println(MY_NAME);
+  
   Serial.println("In Setup");
   mySerial.begin(9600);
   
@@ -777,6 +780,7 @@ void loop(){
     //Save old values
     for(int i = 0; i < PACKET_LENGTH; i++){
       oldMsg[i] = currMsg[i];
+          
     }
 
     //Get new values, if no packet available, currMsg will be null
@@ -793,8 +797,13 @@ void loop(){
     else{
       //..otherwise, the packet is good, and you got a new message successfully
       gotNewMsg = true;
-      /*
       lastHeardFrom = currMsg[SENDER];
+      
+      
+      
+      
+      
+      /*
       Serial.print("Msg from ");
       Serial.print(currMsg[SENDER]);
       Serial.print(" to ");
@@ -828,6 +837,10 @@ void loop(){
     //check receive FIFO for Startup Message
     if(currMsg[SENDER] == 0 && currMsg[TARGET] == 0){  //"Command is sender and target is 0" is the startup message
       state = DECIDE;
+      
+      Serial.println(" ");
+      Serial.println("Initialized");
+      Serial.println(" ");
       //resetData();
     }
     wantNewMsg = true;
@@ -842,8 +855,6 @@ void loop(){
     //Serial.println("Decide State");
 
     
-    //Serial.print("currMsg = ");
-    //Serial.println(currMsg[SENDER], DEC);
     
     //Serial.print("lastHeardFrom = ");
     //Serial.println(lastHeardFrom, DEC);
@@ -879,6 +890,16 @@ void loop(){
       //state = IDLE_S;
       //wantNewMsg = false;
     //}else 
+    
+    /*
+    Serial.print("SENDER = ");
+    Serial.println(currMsg[SENDER], DEC);
+    Serial.print("END_BYTE = ");
+    Serial.println(currMsg[END_BYTE], DEC);
+    Serial.print("lastHeardFrom = ");
+    Serial.println(lastHeardFrom, DEC);
+    */
+    
     if((currMsg[SENDER] == PREV_NODE) && (currMsg[END_BYTE] == byte(1)) && (lastHeardFrom == PREV_NODE)){
       state = SEND;
       wantNewMsg = false;
