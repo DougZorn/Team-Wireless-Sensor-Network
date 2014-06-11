@@ -1056,10 +1056,6 @@ if(rcDelayCommand == 20) {
       }
     #endif
 
-    for(i = 0; i < 4; i++){
-     rcData[i] = rcData[i] - 36;
-    }
-
     uint16_t auxState = 0;
     
       //comment out for autonmous
