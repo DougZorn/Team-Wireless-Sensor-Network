@@ -2,7 +2,7 @@ function(){
 
 	prevRound <- -1
 	roundNumber <- 0
-
+	
 	#Infinite loop, CMDS will run until ESC is hit in R command window
 	repeat{
 		index <- 0
@@ -10,7 +10,7 @@ function(){
 		#Loop to look at input file, only processes input if
 		#round number changes in line 1
 		while(roundNumber != prevRound ){
-			line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+			line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 			
 			#Check for good file
 			if(!is.na(line[1])){
@@ -19,21 +19,22 @@ function(){
 				
 				#If round has changed from previously read round
 				if(line[1] == -3 && line[2] != prevRound){   # roundNumber + 1){
+					roundNumber = line[2]
 					
 					#Input has changed, get number of nodes
 					index <- index + 1 
-					line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+					line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 					size <- line[3] 
 					
 					#Make empty matrix/names matrix of appropriate sizes
-					data <- matrix(c(rep(0,size*size)), size, size) 
+					data <- matrix(c(rep(0,size * size)), size, size) 
 					desired <- matrix(c(rep(0,size*2)), size, 2)
 					
 					index <- index + 1
 					
 					#Everything is checked, so read entire file
 					repeat{
-						line <- scan("input.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
+						line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 						#if EOF, stop scanning
 						if(!length(line)) break 
 						
@@ -79,7 +80,8 @@ function(){
 		roundNumber <- roundNumber + 1;
 		
 		
-		print("Round Change, processing..")
+		print("Round Change, processing.. ")
+		print(roundNumber - 1)
 		flush.console()
 		
 		#Checking for any inappropriate null values
@@ -93,15 +95,21 @@ function(){
 		}
 		
 		#MDS will not run if there are null values in dissimilarity matrix ("NA" values)
-		if(!hasNA){
+		if(hasNA){
 			print("Has NA values still")
 			flush.console()
+			
+			cat("-3 ", file = "Routput.txt", append = FALSE)
+			cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
+			cat("-4 ", file = "Routput.txt", append = TRUE)
+			cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")			
+		
 		}else{
 			#Do MDS
 			fit <- cmdscale(data, eig=TRUE, k=2)
 			
 			#At least one eigenvalue must be nonzero for MDS to be a success
-			if(any(fit$eig >0)){
+			if(any(fit$eig > 0)){
 				#Find how much to translate results to center around node A (command node)
 				moveX <- x1 - fit$points[1,1]
 				moveY <- y1 - fit$points[1,2]
@@ -155,11 +163,34 @@ function(){
 				
 				fit$points <- fit$points %*% rotate
 				
-				
 				#Test for flip.  Use third anchor point to test if matrix has flipped orientation
 				#"tol" is tolerance of how close points need to be to deem a flip necessary
-				tol <- 4
-				if((fit$points[3,1] > x3 + tol) || (fit$points[3,1] < x3 - tol) || (fit$points[3,2] > y3 + tol) || (fit$points[3,2] < y3 - tol)){
+				tol <- 72
+				print("x3 is ")
+				print(x3)
+				print("y3 is ")
+				print(y3)
+				print("calcX is ")
+				print(fit$points[3,1])
+				print("calcY is ")
+				print(fit$points[3,2])
+				
+				if(fit$points[3,1] < -x3 + tol) print("first")
+				if(fit$points[3,1] > -x3 - tol) print("second")
+				if(fit$points[3,2] < -y3 + tol) print("third")
+				if(fit$points[3,2] > -y3 - tol) print("fourth")
+				
+				
+				flush.console()
+				
+				
+				
+				if(((fit$points[3,1] < -x3 + tol) && 
+					(fit$points[3,1] > -x3 - tol) && 
+					(fit$points[3,2] < -y3 + tol) && 
+					(fit$points[3,2] > -y3 - tol))){
+					print("flipping")
+					flush.console()
 					
 					#Flip is needed, so flip across X axis
 					flip <- matrix(c(1,0,0,-1),2,2)
@@ -236,23 +267,27 @@ function(){
 				#par(new=TRUE)
 				
 				#Plot desired points
-				xx <- desired[,1]
-				yy <- desired[,2]
-				text(xx,yy,labels = row.names(desired), cex=1.2)
-				text(xx + 15.0, yy, paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
+				#xx <- desired[,1]
+				#yy <- desired[,2]
+				#text(xx,yy,labels = row.names(desired), cex=1.2)
+				#text(xx + 15.0, yy, paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
 				
 				#Draw a nifty arrow
-				arrows(x, y, xx, yy, length = .15, angle = 20, code = 2, col = "red")
+				#arrows(x, y, xx, yy, length = .15, angle = 20, code = 2, col = "red")
 				
 				
 				#Round calculations, print to file
-				cat(roundNumber, file = "output.txt", append = FALSE, sep = "\n")
+				cat("-3 ", file = "Routput.txt", append = FALSE)
+				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 				for(i in 1:size){
-					cat(round(x[i] + 126), file = "output.txt", append = TRUE)
-					cat(" ", file = "output.txt", append = TRUE)
-					cat(round(y[i] + 126), file = "output.txt", append = TRUE, sep = "\n")
+					cat(i-1, file = "Routput.txt", append = TRUE)
+					cat(" ", file = "Routput.txt", append = TRUE)
+					cat(round(x[i] + 127), file = "Routput.txt", append = TRUE)
+					cat(" ", file = "Routput.txt", append = TRUE)
+					cat(round(y[i] + 127), file = "Routput.txt", append = TRUE, sep = "\n")
 				}
-				cat(roundNumber, file = "output.txt", append = TRUE, sep = "\n")
+				cat("-4 ", file = "Routput.txt", append = TRUE)
+				cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 			
 			} #End of eig check case
 		} #End of NA check case
@@ -265,5 +300,5 @@ function(){
 		#dev.copy(jpeg, filename="plot.jpg")
 		#dev.off()
 	}
-	return(fit)
+	return(fit$points)
 }

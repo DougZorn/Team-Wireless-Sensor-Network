@@ -26,7 +26,7 @@
 #define MSP_COMP_GPS             107   //out message         distance home, direction home
 #define MSP_ATTITUDE             108   //out message         2 angles 1 heading
 #define MSP_ALTITUDE             109   //out message         altitude, variometer
-#define MSP_ANALOG               110   //out message         vbat, powermetersum, rssi if available on RX
+#define MSP_ANALOG               110   //out message         vbat, powermetersum, rssi if available on RXboxarm
 #define MSP_RC_TUNING            111   //out message         rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
 #define MSP_PID                  112   //out message         P I D coeff (9 are used currently)
 #define MSP_BOX                  113   //out message         BOX setup (number is dependant of your setup)
@@ -185,7 +185,9 @@ void serialCom() {
     while (cc-- GPS_COND SPEK_COND SBUS_COND) {
       uint8_t bytesTXBuff = SerialUsedTXBuff(CURRENTPORT); // indicates the number of occupied bytes in TX buffer
       if (bytesTXBuff > TX_BUFFER_SIZE - 50 ) return; // ensure there is enough free TX buffer to go further (50 bytes margin)
-      c = SerialRead(CURRENTPORT);
+      if (CURRENTPORT!= 1 ){
+        c = SerialRead(CURRENTPORT);
+      }
       #ifdef SUPPRESS_ALL_SERIAL_MSP
         // no MSP handling, so go directly
         evaluateOtherData(c);

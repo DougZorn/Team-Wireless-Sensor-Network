@@ -25,8 +25,51 @@ November  2013     V2.3
 #include "Serial.h"
 #include "GPS.h"
 #include "Protocol.h"
+#include "NodeInterface.h"
 
 #include <avr/pgmspace.h>
+
+int waitRound = 0;
+/*
+boolean sendStartEndByte(char *state){
+  switch(state){
+    case "start":
+      Serial.println("started"); 
+      //SerialWrite(1,0x80);
+      return 0;
+    case "end": 
+      Serial.println("end"); 
+      //SerialWrite(1,0xC0);
+      return 0;
+    default:
+      return 1;
+  }
+}
+*/
+
+void sendBit16(int ID, int16_t data16){
+  byte temp;
+  SerialWrite(1,ID);
+  temp = data16 >> 8;
+  SerialWrite(1,temp);
+  temp = data16;
+  SerialWrite(1,temp);
+}
+
+void sendBit32(int ID, int32_t data32){
+  byte temp;
+  SerialWrite(1,ID);
+  temp = data32 >> 24;
+  SerialWrite(1,temp);
+  temp = data32>>16;
+  SerialWrite(1,temp);
+  temp = data32>>8;
+  SerialWrite(1,temp);
+  temp = data32;
+  SerialWrite(1,temp);
+}
+byte ackFlag = 0;
+byte constFlag = 0;
 
 /*********** RC alias *****************/
 
@@ -178,6 +221,10 @@ att_t att;
 #endif
 
 int16_t  debug[4];
+int16_t lastValue[8] = {
+  1500,1500,1500,1500,1500,1500,1500,1500};
+int16_t setValue[8] =  {
+  1500,1500,1500,1500,1500,1500,1500,1500};
 
 flags_struct_t f;
 
@@ -552,7 +599,25 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
   }
 }
 
+
+//ALGAE BLOOM ADDITION
+float gyroAvgRoll[5];
+float gyroAvgPitch[5];
+float gyroAvgYaw[5];
+
+float avgOut[3];
+//ALGAE BLOOM ADDITION
+
 void setup() {
+  //Gyro smooothing ALGAE BLOOM ADDITION
+  int i= 0;
+  for(i = 0; i<5; i++){
+    gyroAvgRoll[i] = 0;
+    gyroAvgPitch[i] = 0;
+    gyroAvgYaw[i] = 0;
+  }
+  //Gyro smooothing ALGAE BLOOM ADDITION
+  
   #if !defined(GPS_PROMINI)
     SerialOpen(0,SERIAL0_COM_SPEED);
     #if defined(PROMICRO)
@@ -801,6 +866,51 @@ void loop () {
       failsafeCnt++;
     #endif
     // end of failsafe routine - next change is made with RcOptions setting
+	//ULTRASONIC DATA TO AUX CHANNEL FOR DEBUG
+	//rcData[4] = sensorDataU + 1500;
+
+    
+    ///////////////////////////////////////////////////////////////Algae Bloom Deadband and account for PWM//////////////////////////////////////////////////////////////////
+    //Account for PWM discrete values
+    for(i = 0; i<4; i++){
+      rcData[i]-= 34;
+    }
+    //Check if value is fluctuating in small interval
+    for(i = 0; i<4; i++){
+      if((rcData[i] < lastValue[i]+3) && (rcData[i] > lastValue[i]-3)){ //If it is, set it to the last assigned value
+        rcData[i] = setValue[i];
+        lastValue[i] = rcData[i]; //Save current value to compare for next time
+      }
+      else{                        //If not, set a new assigned value
+        setValue[i] = rcData[i];
+        lastValue[i] = rcData[i];
+      }
+    }
+    for(i = 0; i<4; i++){
+      if((rcData[i] < 1506) && (rcData[i] > 1494)){ //check if rcData value is within deadband zone, if so, set it to midpoint
+        rcData[i] = 1500;
+      }
+    }/*
+    if((axisPID[ROLL] == 0 || avgOut[ROLL] == 0) && rcData[ROLL] != 1500){
+      rcData[ROLL] = 1500;
+    }
+    if((axisPID[PITCH] == 0 || avgOut[PITCH] == 0) && rcData[ROLL] != 1500){
+      rcData[PITCH] = 1500;
+    }*//*
+    if (rcData[THROTTLE] > 1200){ // If throttle is high enough to fly, check if quad needs a small roll or pitch push
+      if(rcData[ROLL]  == 1500){
+        if(axisPID[ROLL] != 0){
+          rcData[ROLL] += (axisPID[ROLL]/4);
+        }
+      }
+      if(rcData[PITCH] == 1500){
+        if(axisPID[PITCH] != 0){
+          rcData[PITCH] += (axisPID[PITCH]/4);
+        }
+      }
+    }*/
+    ///////////////////////////////////////////////////////////////Algae Bloom end//////////////////////////////////////////////////////////////////	
+	
 
     // ------------------ STICKS COMMAND HANDLER --------------------
     // checking sticks positions
@@ -810,6 +920,7 @@ void loop () {
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
+	
     if(stTmp == rcSticks) {
       if(rcDelayCommand<250) rcDelayCommand++;
     } else rcDelayCommand = 0;
@@ -830,7 +941,7 @@ void loop () {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
       }
     }
-    if(rcDelayCommand == 20) {
+if(rcDelayCommand == 20) {
       if(f.ARMED) {                   // actions during armed
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
@@ -945,12 +1056,23 @@ void loop () {
       }
     #endif
 
+    for(i = 0; i < 4; i++){
+     rcData[i] = rcData[i] - 36;
+    }
+
     uint16_t auxState = 0;
+    
+      //comment out for autonmous
+   /////////////////////ALGAE BLOOM CHANGE/////////////////////////////////////  
+  ///* 
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
-      rcOptions[i] = (auxState & conf.activate[i])>0;
-
+      rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
+   //*/
+    
+    ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
+    
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
@@ -984,7 +1106,8 @@ void loop () {
         if (rcOptions[BOXBARO]) {
           if (!f.BARO_MODE) {
             f.BARO_MODE = 1;
-            AltHold = alt.EstAlt;
+            //AltHold = alt.EstAlt;
+			AltHold = sensorDataU;
             #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
               initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
             #else
@@ -1007,7 +1130,8 @@ void loop () {
         }
       #endif
     #endif
-    #if MAG
+    
+	#if MAG
       if (rcOptions[BOXMAG]) {
         if (!f.MAG_MODE) {
           f.MAG_MODE = 1;
@@ -1175,7 +1299,8 @@ void loop () {
         }
         isAltHoldChanged = 1;
       } else if (isAltHoldChanged) {
-        AltHold = alt.EstAlt;
+        //AltHold = alt.EstAlt;
+		AltHold = sensorDataU;
         isAltHoldChanged = 0;
       }
       rcCommand[THROTTLE] = initialThrottleHold + BaroPID;
@@ -1207,16 +1332,34 @@ void loop () {
     }
   #endif
 
+int j;
   //**** PITCH & ROLL & YAW PID ****
+  ////////////////////////////////////Gyro Weighted History///////////////////////////////////////////////////
 #if PID_CONTROLLER == 1 // evolved oldschool
   if ( f.HORIZON_MODE ) prop = min(max(abs(rcCommand[PITCH]),abs(rcCommand[ROLL])),512);
+  for(j = 4; j>0; j--){
+    gyroAvgRoll[j] = gyroAvgRoll[j-1];
+    gyroAvgPitch[j] = gyroAvgPitch[j-1];
+    gyroAvgYaw[j] = gyroAvgYaw[j-1];
+  }
+  gyroAvgRoll[0] = imu.gyroData[ROLL];
+  gyroAvgPitch[0] = imu.gyroData[PITCH];
+  gyroAvgYaw[0] = imu.gyroData[YAW];
+
+  avgOut[ROLL] = (0.6*gyroAvgRoll[0])+ (0.2*gyroAvgRoll[1])+(0.1*gyroAvgRoll[2])+(0.05*gyroAvgRoll[3])+(0.05*gyroAvgRoll[4]);
+  avgOut[PITCH] = (0.6*gyroAvgPitch[0])+ (0.2*gyroAvgPitch[1])+(0.1*gyroAvgPitch[2])+(0.05*gyroAvgPitch[3])+(0.05*gyroAvgPitch[4]);
+  avgOut[YAW] = (0.6*gyroAvgYaw[0])+ (0.2*gyroAvgYaw[1])+(0.1*gyroAvgYaw[2])+(0.05*gyroAvgYaw[3])+(0.05*gyroAvgYaw[4]);
 
   // PITCH & ROLL
   for(axis=0;axis<2;axis++) {
     rc = rcCommand[axis]<<1;
-    error = rc - imu.gyroData[axis];
+    //error = rc - imu.gyroData[axis];
+    error = rc - avgOut[axis];
+
     errorGyroI[axis]  = constrain(errorGyroI[axis]+error,-16000,+16000);       // WindUp   16 bits is ok here
-    if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
+    //if (abs(imu.gyroData[axis])>640) errorGyroI[axis] = 0;
+
+    if (abs(avgOut[axis])>640) errorGyroI[axis] = 0;
 
     ITerm = (errorGyroI[axis]>>7)*conf.pid[axis].I8>>6;                        // 16 bits is ok here 16000/125 = 128 ; 128*250 = 32000
 
@@ -1228,7 +1371,7 @@ void loop () {
       errorAngleI[axis]  = constrain(errorAngleI[axis]+errorAngle,-10000,+10000);                                                // WindUp     //16 bits is ok here
 
       PTermACC           = ((int32_t)errorAngle*conf.pid[PIDLEVEL].P8)>>7; // 32 bits is needed for calculation: errorAngle*P8 could exceed 32768   16 bits is ok for result
-      
+
       int16_t limit      = conf.pid[PIDLEVEL].D8*5;
       PTermACC           = constrain(PTermACC,-limit,+limit);
 
@@ -1238,22 +1381,23 @@ void loop () {
       PTerm              = PTermACC + ((PTerm-PTermACC)*prop>>9);
     }
 
-    PTerm -= ((int32_t)imu.gyroData[axis]*dynP8[axis])>>6; // 32 bits is needed for calculation   
-    
+    PTerm -= ((int32_t)imu.gyroData[axis]*dynP8[axis])>>6; // 32 bits is needed for calculation
+
     delta          = imu.gyroData[axis] - lastGyro[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
     lastGyro[axis] = imu.gyroData[axis];
     DTerm          = delta1[axis]+delta2[axis]+delta;
     delta2[axis]   = delta1[axis];
     delta1[axis]   = delta;
- 
+
     DTerm = ((int32_t)DTerm*dynD8[axis])>>5;        // 32 bits is needed for calculation
 
     axisPID[axis] =  PTerm + ITerm - DTerm;
   }
 
+
   //YAW
-  #define GYRO_P_MAX 300
-  #define GYRO_I_MAX 250
+#define GYRO_P_MAX 300
+#define GYRO_I_MAX 250
 
   rc = (int32_t)rcCommand[YAW] * (2*conf.yawRate + 30)  >> 5;
 
@@ -1261,16 +1405,30 @@ void loop () {
   errorGyroI_YAW  += (int32_t)error*conf.pid[YAW].I8;
   errorGyroI_YAW  = constrain(errorGyroI_YAW, 2-((int32_t)1<<28), -2+((int32_t)1<<28));
   if (abs(rc) > 50) errorGyroI_YAW = 0;
-  
+
   PTerm = (int32_t)error*conf.pid[YAW].P8>>6;
-  #ifndef COPTER_WITH_SERVO
-    int16_t limit = GYRO_P_MAX-conf.pid[YAW].D8;
-    PTerm = constrain(PTerm,-limit,+limit);
-  #endif
-  
+#ifndef COPTER_WITH_SERVO
+  int16_t limit = GYRO_P_MAX-conf.pid[YAW].D8;
+  PTerm = constrain(PTerm,-limit,+limit);
+#endif
+
   ITerm = constrain((int16_t)(errorGyroI_YAW>>13),-GYRO_I_MAX,+GYRO_I_MAX);
-  
+
   axisPID[YAW] =  PTerm + ITerm;
+
+  //debug[0]=rcCommand[THROTTLE];
+  //debug[1]=axisPID[ROLL];
+  //debug[2]=axisPID[PITCH];
+  //debug[3]=axisPID[YAW];
+
+  if(rcData[ROLL] == 1500 && avgOut[ROLL] == 0) axisPID[ROLL] = 0;
+  if(rcData[PITCH] == 1500 && avgOut[PITCH] == 0) axisPID[PITCH] = 0;
+  if(rcData[YAW] == 1500 && avgOut[YAW] == 0) axisPID[YAW] = 0;
+
+  debug[0] = imu.gyroData[ROLL];
+  debug[1] = avgOut[ROLL];
+  debug[2] = axisPID[ROLL];
+  debug[3] = att.angle[ROLL];
   
 #elif PID_CONTROLLER == 2 // alexK
   #define GYRO_I_MAX 256
@@ -1338,8 +1496,43 @@ void loop () {
 #else
   #error "*** you must set PID_CONTROLLER to one existing implementation"
 #endif
+
+
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
   writeMotors();
+  
+
+  if(( waitRound >= 20)||(ackFlag != 0x00)){
+    if(SerialUsedTXBuff(1)<(TX_BUFFER_SIZE - 50)){  //NOTE: Leave at least 50Byte margin to avoid errors
+      
+      SerialWrite(1,0x80);  //startByte
+      
+      if(ackFlag != 0x00){
+        constFlag = ackFlag;
+      }
+
+      SerialWrite(1,64);
+      SerialWrite(1,constFlag);
+      
+      
+      sendBit16(4, att.heading);  
+      
+      sendBit16(5, imu.gyroADC[0]);
+      sendBit16(6, imu.gyroADC[1]);
+      sendBit16(7, imu.gyroADC[2]);
+      
+      sendBit16(8, imu.accADC[0]);
+      sendBit16(9, imu.accADC[1]);
+      sendBit16(10, imu.accADC[2]);
+      
+      sendBit32(32,alt.EstAlt);
+      
+      SerialWrite(1,0xC0);
+
+      waitRound = 0;
+    }
+  }
+  waitRound++;
 }
