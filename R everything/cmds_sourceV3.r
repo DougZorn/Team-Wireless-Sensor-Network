@@ -267,13 +267,13 @@ function(){
 				#par(new=TRUE)
 				
 				#Plot desired points
-				#xx <- desired[,1]
-				#yy <- desired[,2]
-				#text(xx,yy,labels = row.names(desired), cex=1.2)
-				#text(xx + 15.0, yy, paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
+				xx <- desired[,1]
+				yy <- desired[,2]
+				text(xx[4],yy[4],labels = row.names(desired), cex=1.2)
+				text(xx[4] + 15.0, yy[4], paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
 				
 				#Draw a nifty arrow
-				#arrows(x, y, xx, yy, length = .15, angle = 20, code = 2, col = "red")
+				arrows(x[4], y[4], xx[4], yy[4], length = .15, angle = 20, code = 2, col = "red")
 				
 				
 				#Round calculations, print to file
