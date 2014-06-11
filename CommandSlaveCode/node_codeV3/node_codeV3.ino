@@ -13,8 +13,8 @@
 #include "cc2500_REG_V2.h"
 #include "cc2500_VAL_V2.h"
 #include "cc2500init_V2.h"
-#include "read_write.h"
-//#include "read_writeV2.h"
+//#include "read_write.h"
+#include "read_writeV2.h"
 #include "motorcontrol.h"
 
 //Declare Pins for UART
@@ -27,8 +27,8 @@ boolean logToggle = false;
 
 //The LED PIN
 
-int ledPin = 9;
-//int ledPin = 4; //V2
+//int ledPin = 9;
+int ledPin = 4; //V2
 
 //Timer info
 const unsigned long TIMEOUT_PP = 300; //??? check this timeout number stub
@@ -479,11 +479,16 @@ void writeData16(int16_t data){  //used to write to uart, if our data is int16
 
 int updateData(byte *array){  //Ultra Sonic will still update even if uart does not update data when calling this
 
+  //Serial.println("in update");
   myData.ultraSonic = analogRead(UltraSonicPin);    // update ultraSonic data no matter what, it does not use uart from control board
 
   if(upDated !=1){          //see if update from uart
     return 1;               
   }
+  
+  
+  //Serial.println("pass updated");
+  
   byte sensorType;
   byte startByte = 0x80;    //Byte indicating the Start of chain of packets
   byte endByte  = 0xC0;     //Byte indicating the End of chain of packets
@@ -495,7 +500,9 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
   
   backupData();            //puts current data into another same structure, just in case we need them
   
+  
   while((array[place] != startByte)&&(place <64)){    //locate where start of packet is
+    
     place++;
     //Serial.print("here: ");
     //Serial.println(place);
@@ -505,6 +512,8 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
     return 1;
   }
   place++;            //move to next byte after start packet
+  
+  //Serial.println("pass place check");
   
   do{
     sensorType = array[place];
@@ -561,13 +570,17 @@ int updateData(byte *array){  //Ultra Sonic will still update even if uart does 
     }
   }while(array[place]!=endByte);  //loop until seeing endByte
   
+  
+  //Serial.println("passed data storage");
+  
   for(int CT; CT<64;CT++){      //reset the array for storing data
     array[CT] = 0;
   }
   mySerial.flush();            //flush everything left in the uart rx buffer, size 64 bytes
   
-  return 0;
   
+  //Serial.println("The end");
+  return 0;
 }
 
 
@@ -590,6 +603,7 @@ void resetData(){    //used to initialize data and reset when reseting all nodes
   Flight = 0;
   atLevel =false;
   unsigned long lastTime;
+  OnOff = 0;
   
   prevACK = 0x00;
   currACK = 0x00;
@@ -622,22 +636,24 @@ void flightFunction(){
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
     
     
-    //Serial.println("");
-    //Serial.print("I am in Flight Mode, OnOff = ");
-    //Serial.print(OnOff, DEC);
-    //Serial.println("");
+    Serial.println("");
+    Serial.print("I am in Flight Mode, OnOff = ");
+    Serial.print(OnOff, DEC);
+    Serial.println("");
     
     
     //arm the motor once here
     if(OnOff==0){
       logMotor = "Armed";
-      //ArmMotors();
+      Serial.println("Arming");
+      ArmMotors();
+      Serial.println("Armed");
       OnOff = 2;
     }
     
     atLevel =false;
     //Serial.println("in flight");
-    byte heightLevel = 0x0B;
+    byte heightLevel = 0x09;
 
     int minHeight = 80; //in cm
     int maxHeight = 90;     
@@ -645,7 +661,7 @@ void flightFunction(){
     if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
       
       //heightLevel = 0x0A + byte(roundUp(((float(minHeight - myData.ultraSonic)/minHeight)*3)));       //power of moters might change because we added weights
-      heightLevel = 0x0C;
+      heightLevel = 0x0A;
       
       writeThrust(heightLevel);
       //Serial.print("Too low: ");
@@ -657,7 +673,7 @@ void flightFunction(){
     
       //heightLevel = 0x0A - byte(roundUp(((float(myData.ultraSonic -maxHeight)/maxHeight)*2))); 
       
-      heightLevel = 0x0B;
+      heightLevel = 0x09;
       
       writeThrust(heightLevel);
       //Serial.print("Too High: ");
@@ -1134,7 +1150,7 @@ void loop(){
   
   
   while(mySerial.available()){ //maybe add || certain byte: hardcoded.
-    //delayMicroseconds(5);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
+    delayMicroseconds(5);    //millis here to avoid missed chained of bytes, dynamic code too restrictive 
     uartArray[curSpot++] = mySerial.read();
     upDated=1;
     if(curSpot>=64){
@@ -1142,7 +1158,15 @@ void loop(){
       break; 
     }
   }
-
+/*
+  Serial.print("array update: ");
+  
+  
+  for(int x = 0; x<64; x++){
+    Serial.print(uartArray[x], HEX);
+    Serial.print(" ");
+  }
+*/
   //+++++++++++++++++++++++++++++++ Movement ProtoCol +++++++++++++++++++++++++++++
   
   //get ride of this later
@@ -1153,9 +1177,9 @@ void loop(){
   
   if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
-    writeRudder(0x0B);  //set netrual because random 
-    writeRoll(0x0B);
-    writePitch(0x0B);
+    //writeRudder(0x0B);  //set netrual because random 
+    //writeRoll(0x0B);
+    //writePitch(0x0B);
     
     byte turn;
     
@@ -1211,20 +1235,19 @@ void loop(){
       
 
     
+      
     if(abs(myData.heading - angle) > 5){    //check to see which mag we want and adjust the statment
       
       logMovement = "Stay";
-      
       if((myData.heading - angle) <= 0){    
         //spin clockwise (when looking down on copter)
         
         // might want a function to determine how fast to spin
         //turn = 0x0A + byte(roundUp((float(abs(myData.heading - angle)/180))*3));  //a function that selects 10 
         
-        turn =0x07;
-        writeRudder(turn);
+        writeRudder(0x0C);
         
-        logTurn = "Left";
+        logTurn = "Clockwise";
         //Serial.print("turn , <= 0: ");
         //Serial.println(turn, HEX);
         //Serial.print("turn:  <= 0    => ");
@@ -1233,10 +1256,10 @@ void loop(){
       }else{
         //spin counter clockwise
         //turn = 0x0A - byte(roundUp((float(abs(myData.heading - angle)/180))*3));
-        turn =0x0D;
-        writeRudder(turn);
         
-        logTurn = "Right";
+        writeRudder(0x0A);
+        
+        logTurn = "Counter Clockwise";
         
        // Serial.print("turn else: ");
         //Serial.println(turn, HEX);
@@ -1270,13 +1293,13 @@ void loop(){
         logMovement = "Pitch Backward";
         //Serial.println("too close");
         logTooClose = "Too Close, within 10 inch";
-        writePitch(0x0B);    //if too close, stay on where it is
+        //writePitch(0x0B);    //if too close, stay on where it is
       }else{
         
         logMovement = "Pitch Foward";
         //Serial.println("far");
         logTooClose = "Clear";
-        writePitch(0x0C);    //if not, continue moving forward
+        //writePitch(0x0C);    //if not, continue moving forward
       }
       
       //here would be where you'd check to see if other nodes are too close

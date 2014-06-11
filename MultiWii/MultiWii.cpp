@@ -624,7 +624,7 @@ void setup() {
       SerialOpen(1,SERIAL1_COM_SPEED);
     #endif
     #if defined(MEGA)
-      SerialOpen(1,SERIAL1_COM_SPEED);
+      SerialOpen(1,9600);
       SerialOpen(2,SERIAL2_COM_SPEED);
       SerialOpen(3,SERIAL3_COM_SPEED);
     #endif
@@ -1532,6 +1532,7 @@ int j;
       SerialWrite(1,0xC0);
 
       waitRound = 0;
+      
     }
   }
   waitRound++;

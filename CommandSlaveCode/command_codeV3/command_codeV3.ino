@@ -410,11 +410,11 @@ int byteToInt(byte input){
   Serial.begin(9600);
   init_CC2500_V2();
   
-  Serial.println("After SPI Init");
+  //Serial.println("After SPI Init");
   
-  Serial.println(ReadReg(REG_IOCFG0),HEX);
-  Serial.println(ReadReg(REG_IOCFG1),HEX);
-  Serial.println(ReadReg(REG_IOCFG2),HEX);
+  //Serial.println(ReadReg(REG_IOCFG0),HEX);
+  //Serial.println(ReadReg(REG_IOCFG1),HEX);
+  //Serial.println(ReadReg(REG_IOCFG2),HEX);
   
   pinMode(ledPin,OUTPUT);
   while(listenForPacket(RST)){
@@ -603,7 +603,7 @@ void loop(){
     //Stub, read from Serial to detect results from R, then read in until
     //receive "-4 [roundNumber]" back (signifies end of transmission)
     //For now, just delay for a second
-    delay(100);
+    //delay(100);
     userCom();
 
 
