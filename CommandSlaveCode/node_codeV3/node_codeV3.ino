@@ -636,10 +636,10 @@ void flightFunction(){
   if(Flight==0){            //Flight is 0 when we are flying, 1 when we want to land, 2 when we have landed
     
     
-    Serial.println("");
-    Serial.print("I am in Flight Mode, OnOff = ");
-    Serial.print(OnOff, DEC);
-    Serial.println("");
+    //Serial.println("");
+    //Serial.print("I am in Flight Mode, OnOff = ");
+    //Serial.print(OnOff, DEC);
+    //Serial.println("");
     
     
     //arm the motor once here
@@ -655,8 +655,8 @@ void flightFunction(){
     //Serial.println("in flight");
     byte heightLevel = 0x09;
 
-    int minHeight = 80; //in cm
-    int maxHeight = 90;     
+    int minHeight = 78; //in cm
+    int maxHeight = 82;     
    
     if(myData.ultraSonic < minHeight){   //in cm, this is 6 feet
       
@@ -1175,7 +1175,7 @@ void loop(){
   //should be after update for latest info on sensors and adjust the movement, dont go in if doesn't have location,
   // enough data for location, or at the properheight
   
-  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
+  if((updateData(uartArray)==0) && moveRequired && RSSIArrayFull){//&&atLevel){          //update the Data and return if success, Ultrasonic will update no matter what
     
     //writeRudder(0x0B);  //set netrual because random 
     //writeRoll(0x0B);

@@ -1060,12 +1060,12 @@ if(rcDelayCommand == 20) {
     
       //comment out for autonmous
    /////////////////////ALGAE BLOOM CHANGE/////////////////////////////////////  
-  ///* 
+  /* 
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
-   //*/
+   */
     
     ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
     
