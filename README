@@ -1,1 +1,21 @@
-This is the Repository for the UCSC wireless sensor network Team. More info to follow
+This is the Repository for the UCSC wireless sensor network Team.
+
+REPO FOLDER CONTENTS
+
+BoardBringUpTest: Test code for board peripherals
+CommandSlaveCode: Network code for node communication
+Gantt: Spring schedule
+MultiWii: Crius AIO flight control board software
+MultiWii – flight mode testing
+MultiWii – ultrasonic: 
+MultiWiiConf: GUI program that interfaces with the flight control board
+PCBartAndBoardFiles: Source and art files for the autonomous PCB node. BOM.
+R everything: Scripts and code to process MDS
+SendReceiveInitialize: Basic low level code for radio and micro. Send, receive, and initialization
+serialToFromText:
+serialToText:
+Solidworks: Early solid works designs for legs and prop guards
+TestCodes:
+Testing trims:
+textToSerial:
+UART code: UART from micro to flight control board and vice versa
