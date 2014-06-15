@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include "read_writeV2.h"
-//#include "read_write.h"
-#include "cc2500_VAL_V2.h"
+//#include "read_write.h"    //used for nodes that are on batteries, different pins, must be the same as the header on node_codeV3
+#include "cc2500_VAL_V2.h"    //used for nodes thats on the boards of coptors
 #include "cc2500_REG_V2.h"
 
 #ifndef INIT_CC2500_V2_H

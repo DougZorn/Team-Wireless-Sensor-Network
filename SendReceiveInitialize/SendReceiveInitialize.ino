@@ -14,10 +14,12 @@ void setup()
 
 void loop()
 {   
+  //sendPacket(0x01,0x02,0x03,0x04,0x05,0x06);
   listenForPacket(Packet);
-  for(int x =0; x<7;x++){
-   Serial.println(Packet[x],HEX); 
-  }
+  //for(int x =0; x<7;x++){
+  // Serial.println(Packet[x],HEX); 
+ // }
+   Serial.println(Packet[6],DEC);
    Serial.println("");
 } 
 

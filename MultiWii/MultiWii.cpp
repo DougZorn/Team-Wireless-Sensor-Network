@@ -624,7 +624,7 @@ void setup() {
       SerialOpen(1,SERIAL1_COM_SPEED);
     #endif
     #if defined(MEGA)
-      SerialOpen(1,SERIAL1_COM_SPEED);
+      SerialOpen(1,9600);
       SerialOpen(2,SERIAL2_COM_SPEED);
       SerialOpen(3,SERIAL3_COM_SPEED);
     #endif
@@ -920,6 +920,7 @@ void loop () {
       if(rcData[i] > MINCHECK) stTmp |= 0x80;      // check for MIN
       if(rcData[i] < MAXCHECK) stTmp |= 0x40;      // check for MAX
     }
+	
     if(stTmp == rcSticks) {
       if(rcDelayCommand<250) rcDelayCommand++;
     } else rcDelayCommand = 0;
@@ -940,7 +941,7 @@ void loop () {
         if ( rcOptions[BOXARM] && f.OK_TO_ARM ) go_arm(); else if (f.ARMED) go_disarm();
       }
     }
-    if(rcDelayCommand == 20) {
+if(rcDelayCommand == 20) {
       if(f.ARMED) {                   // actions during armed
         #ifdef ALLOW_ARM_DISARM_VIA_TX_YAW
           if (conf.activate[BOXARM] == 0 && rcSticks == THR_LO + YAW_LO + PIT_CE + ROL_CE) go_disarm();    // Disarm via YAW
@@ -1054,19 +1055,17 @@ void loop () {
         AccInflightCalibrationSavetoEEProm = 1;
       }
     #endif
-     
-    //maintainNode(); //maintain signal values for current flight mode status
-    
+
     uint16_t auxState = 0;
     
       //comment out for autonmous
    /////////////////////ALGAE BLOOM CHANGE/////////////////////////////////////  
-  ///* 
+  /* 
     for(i=0;i<4;i++)
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0; //determine flight mode status based on rcData
-   //*/
+   */
     
     ackFlag = checkNode(); //If there is new data fromk UART, change rcOptions
     
@@ -1127,7 +1126,8 @@ void loop () {
         }
       #endif
     #endif
-    #if MAG
+    
+	#if MAG
       if (rcOptions[BOXMAG]) {
         if (!f.MAG_MODE) {
           f.MAG_MODE = 1;
@@ -1492,6 +1492,8 @@ int j;
 #else
   #error "*** you must set PID_CONTROLLER to one existing implementation"
 #endif
+
+
   mixTable();
   // do not update servos during unarmed calibration of sensors which are sensitive to vibration
   if ( (f.ARMED) || ((!calibratingG) && (!calibratingA)) ) writeServos();
@@ -1524,10 +1526,10 @@ int j;
       sendBit32(32,alt.EstAlt);
       
       SerialWrite(1,0xC0);
-      
+
       waitRound = 0;
+      
     }
   }
   waitRound++;
-  
 }
