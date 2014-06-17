@@ -12,10 +12,10 @@ MultiWiiConf: GUI program that interfaces with the flight control board
 PCBartAndBoardFiles: Source and art files for the autonomous PCB node. BOM.
 R everything: Scripts and code to process MDS
 SendReceiveInitialize: Basic low level code for radio and micro. Send, receive, and initialization
-serialToFromText:
-serialToText:
+serialToFromText:  This is the final program which connects R to command node though the serial connection and the input/output files of R
+serialToText:  This was the prototype for serialToFromText
 Solidworks: Early solid works designs for legs and prop guards
 TestCodes:
 Testing trims:
-textToSerial:
+textToSerial:  This was the prototype for serialToFromText
 UART code: UART from micro to flight control board and vice versa

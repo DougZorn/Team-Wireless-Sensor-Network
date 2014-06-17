@@ -51,17 +51,17 @@ void draw() {
   case INSPECTSERIAL:
     //println("inspectSerial state");
 
+	//Anytime there's anything in the serial channel, read it
     if (myPort.available() > 0) {
       serialInput = myPort.readStringUntil('\n');
-      println("received: " + serialInput);
+      println("Received: " + serialInput);
       
       if (serialInput != null) {
         serialPieces = split(serialInput, ' ');
         
         if (int(trim(serialPieces[0])) == -3) {
-          
+			//Only when you read in a line that starts with "-3" do you move on
             state = READSERIAL;
-            //mess with File file and file.delete()? stub
             rounds = int(trim(serialPieces[1]));
             println("Round Number from Serial: " + rounds);
         }
@@ -71,9 +71,11 @@ void draw() {
 
 
   case READSERIAL:
-    println("readSerial state");
+    //println("readSerial state");
+	//Create a text file
     writer = createWriter("Serialoutput.txt");
-
+	
+	//Manually write the first line, since you already have it
     print(int(serialPieces[0]));
     print(" ");
     println(int(trim(serialPieces[1])));
@@ -82,6 +84,7 @@ void draw() {
     writer.print(" ");
     writer.println(int(trim(serialPieces[1])));
 
+	//Then read through all that is in the serial channel and put it into the text file
     while (myPort.available () > 0) {
       delay(10);
       serialInput = myPort.readStringUntil('\n');
@@ -95,20 +98,22 @@ void draw() {
       serialPieces = split(serialInput, ' ');
       println("pieces: " + serialPieces[0] + " " + serialPieces[1]);
       
+	  //Helper program prints to text in proper format
       printToText(serialPieces);
       
-       //-4 check is necessary to ensure we don't pick up other junk in Serial. We only want what's from -3 to -4
+       //-4 check is necessary to ensure we don't pick up other junk in Serial. We only want what's between -3 and -4
       if (int(trim(serialPieces[0])) == -4) break;
     }
     
     println("writing to file");
 
+	//These two lines are required to finish text file
     writer.flush();
     writer.close();
     
     
-    //state = INSPECTSERIAL;
-    state = INSPECTTEXT;
+    //state = INSPECTSERIAL;  //uncomment this line to only read from serial to text
+    state = INSPECTTEXT;  //For normal use, use this line to start waiting on the text file
     break;
 
 
@@ -139,7 +144,7 @@ void draw() {
 
   case READTEXT:
     //println("readText state");
-    //Already have the first line, print it
+    //Already have the first line, so print it to serial manually
     print(int(pieces[0]));
     print(" ");
     println(int(pieces[1]));
@@ -149,12 +154,14 @@ void draw() {
     myPort.write(trim(pieces[1]));
     myPort.write("\n");
 
-    //Loop through the rest of text, print and print to serial
+    //Loop through the rest of text, print to serial
     while (line!= null) {
       line = getNextLine(reader);
       if (line == null) break;
       pieces = split(line, " ");
 
+	  //This either prints to serial normally, or if there is are additional commands that have been typed in
+	  //those commands get written right before the last, "-4", line gets printed
       if (haveNewOrders && int(trim(pieces[0])) == -4) {
         for(int i = 0; i < ordersArray.length; i++){
           myPort.write(trim(ordersArray[i]));
@@ -168,17 +175,18 @@ void draw() {
         printToSerial(pieces);
       }
     }
-
-
+	
     state = INSPECTSERIAL;
     break;
 
   default:
+	//Something broke if you're here.
     println("default state");
     break;
   }
 }
 
+//Helper program to print to text in proper format.  Also prints to Processing terminal
 void printToText(String[] in) {
   println("Printing line to text: ");
   for (int i = 0; i < in.length; i++) {
@@ -193,6 +201,7 @@ void printToText(String[] in) {
   println("");
 }
 
+//Helper program to print to Serial in proper format.  Also prints to Processing terminal
 void printToSerial(String[] in) {
   println("printing line to Serial: ");
   for (int i = 0; i < in.length; i++) {
@@ -207,7 +216,7 @@ void printToSerial(String[] in) {
   println("");
 }
 
-
+//Blocking delay function, which helps at times
 void delay(int amount) {
   int startTime = millis();
   while (startTime + amount > millis ()) {
@@ -216,7 +225,7 @@ void delay(int amount) {
   return;
 }
 
-
+//Convenience helper program
 String getNextLine(BufferedReader br) {
   String line;
   try {
@@ -229,18 +238,18 @@ String getNextLine(BufferedReader br) {
   return line;
 }
 
-
+//Interrupt based keypress checker, which also processes and parses in the char arrays when you hit <enter>
 void keyPressed() { 
   if (key == ENTER) {
     haveNewOrders = true;
 
-    //compile entered keys into a string called "completeCommand"
+    //Compile entered keys into a string called "completeCommand"
     completeInput = emptyStringArray;
     for (int i = 0; i < keyInput.length; i++) {
       completeInput = append(completeInput, str(keyInput[i]));
     }
 
-    //test for valid command
+    //Test for valid command
     String[] test = split(join(completeInput,""), ' ');
     println("test[0] is: {" + test[0] + "}");
     if(trim(test[0]).equals("shutdown") || test[0].equals("node") || test[0].equals("flight") || test[0].equals("land")){
@@ -251,7 +260,6 @@ void keyPressed() {
     }else{
       println("Typo: you typed invalid command {" + join(completeInput,"") + "}");
     }
-    
     
     for(int i = 0; i < ordersArray.length; i++){
       print("{");
