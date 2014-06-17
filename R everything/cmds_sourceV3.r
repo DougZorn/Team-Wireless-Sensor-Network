@@ -1,4 +1,5 @@
 function(){
+	#Note: R reads arrays where the first entry is [1] not [0].  e.g. the second entry in an array is myArray[2]
 
 	prevRound <- -1
 	roundNumber <- 0
@@ -18,21 +19,23 @@ function(){
 				flush.console()
 				
 				#If round has changed from previously read round
-				if(line[1] == -3 && line[2] != prevRound){   # roundNumber + 1){
+				if(line[1] == -3 && line[2] != prevRound){
+					#pick up new round number from file (in case you're just starting)
 					roundNumber = line[2]
 					
 					#Input has changed, get number of nodes
-					index <- index + 1 
+					index <- index + 1  #index is a nifty little trick.  You can't read one line after another in R, but you can read a specific line as specified by how many lines to skip.  Hence, "skip = index".  I carefully increment index to force R to read one line after another in a sensible way
 					line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 					size <- line[3] 
 					
 					#Make empty matrix/names matrix of appropriate sizes
+					#This is why you must start R while using an old file.  R must know "size" so it doesn't attempt to make a matrix of undefined dimensions.
 					data <- matrix(c(rep(0,size * size)), size, size) 
 					desired <- matrix(c(rep(0,size*2)), size, 2)
 					
 					index <- index + 1
 					
-					#Everything is checked, so read entire file
+					#Everything is checked, so read entire file line by line and parse accordingly
 					repeat{
 						line <- scan("Serialoutput.txt", nlines = 1, skip = index, sep = " ", quiet = TRUE)
 						#if EOF, stop scanning
@@ -49,16 +52,7 @@ function(){
 							if(line[2] == 6) y3 <- line[3] 
 						}else if(line[1] == -2){
 							#Desired coordinates handling
-							#convert back to -127 to 127 stub
-							desired[line[2] + 1, line[3] + 1] <- line[4] # - 128  #stub put this line back in once we have real input
-							
-							#the following commented out bit might be necessary, but I think the above line will work
-							#if(line[4] >= 128){
-							#	desired[line[2] + 1, line[3] + 1] <- line[4] - 128
-							#}else if(line[4] < 128){
-							#	desired[line[2] + 1, line[3] + 1] <- (128 - line[4]) *-1
-							#}
-							
+							desired[line[2] + 1, line[3] + 1] <- line[4]
 						}else if(line[1] == -4){
 							#do nothing, don't worry about this line
 							#it is necessary for arduino reading back from Serial
@@ -76,15 +70,15 @@ function(){
 			}
 		}
 		
-		#stub change this to capture the number from line 1 of initial grab
 		roundNumber <- roundNumber + 1;
 		
-		
-		print("Round Change, processing.. ")
+		print("Round Change, current round:")
 		print(roundNumber - 1)
+		print("processing...")
 		flush.console()
 		
 		#Checking for any inappropriate null values
+		#MDS cannot function if any internode distance is 0 (though a node's distance to itself should always be zero)
 		hasNA <- FALSE;
 		for(i in 1:size){
 			for(j in 1:size){
@@ -99,6 +93,9 @@ function(){
 			print("Has NA values still")
 			flush.console()
 			
+			#Even though R didn't run MDS, it should still write a new text file, so that it can
+			#keep up with the round robin.  The text file contains only the first and last line
+			#of a normal output file
 			cat("-3 ", file = "Routput.txt", append = FALSE)
 			cat(roundNumber, file = "Routput.txt", append = TRUE, sep = "\n")
 			cat("-4 ", file = "Routput.txt", append = TRUE)
@@ -165,31 +162,12 @@ function(){
 				
 				#Test for flip.  Use third anchor point to test if matrix has flipped orientation
 				#"tol" is tolerance of how close points need to be to deem a flip necessary
-				tol <- 72
-				print("x3 is ")
-				print(x3)
-				print("y3 is ")
-				print(y3)
-				print("calcX is ")
-				print(fit$points[3,1])
-				print("calcY is ")
-				print(fit$points[3,2])
-				
-				if(fit$points[3,1] < -x3 + tol) print("first")
-				if(fit$points[3,1] > -x3 - tol) print("second")
-				if(fit$points[3,2] < -y3 + tol) print("third")
-				if(fit$points[3,2] > -y3 - tol) print("fourth")
-				
-				
-				flush.console()
-				
-				
-				
+				tol <- 72	
 				if(((fit$points[3,1] < -x3 + tol) && 
 					(fit$points[3,1] > -x3 - tol) && 
 					(fit$points[3,2] < -y3 + tol) && 
 					(fit$points[3,2] > -y3 - tol))){
-					print("flipping")
+					print("Flipping")
 					flush.console()
 					
 					#Flip is needed, so flip across X axis
@@ -266,13 +244,13 @@ function(){
 				text(x + 15.0, y, paste("(", round(x), ", ", round(y), ")"), cex=0.7)
 				#par(new=TRUE)
 				
-				#Plot desired points
+				#Plot desired point for node 4
 				xx <- desired[,1]
 				yy <- desired[,2]
 				text(xx[4],yy[4],labels = row.names(desired), cex=1.2)
 				text(xx[4] + 15.0, yy[4], paste("(", round(xx), ", ", round(yy), ")"), cex=0.7)
 				
-				#Draw a nifty arrow
+				#Draw a nifty arrow for fourth node's desired direction
 				arrows(x[4], y[4], xx[4], yy[4], length = .15, angle = 20, code = 2, col = "red")
 				
 				
@@ -292,6 +270,8 @@ function(){
 			} #End of eig check case
 		} #End of NA check case
 		
+		#stub, here's a method of saving the output to Jpeg, but once you save a plot, the 
+		#plot is destroyed on screen, so it is incompatible with normal use at this point
 		#print to jpeg 
 		#fileName <- toString("pic", roundNumber, ".jpeg");
 		#jpeg(file = "test.jpeg");

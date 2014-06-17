@@ -4,6 +4,8 @@ download R from google drive or from
 http://cran.rstudio.com/
 
 Start up R x64 3.0.2
+
+To run on its own:
 have a folder on your desktop called Rstuff, containing at least
 input.txt
 output.txt
@@ -12,8 +14,9 @@ output.txt
 copy the following (minus the comments) into the command line, hit enter after each
 
 
-//(change "eswedber" to your username)
-setwd("c:/Users/eswedber/Desktop/Rstuff");   
+//(change "username" to your username)
+//(or set this working directory appropriately to wherever serialToFromText is for full functionality)
+setwd("c:/Users/username/Desktop/Rstuff");   
 
 cmds <- function(){ };
 
